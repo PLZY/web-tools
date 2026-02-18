@@ -13,12 +13,10 @@ export const parseMavenTree = (text: string): MavenNode[] => {
     let cleanLine = line.replace(/^\[INFO\]\s*/, '');
     
     // 2. 根节点检测
-    // 根节点通常没有 "+-" 或 "\-"，或者是第一行
-    // 示例: com.example:my-project:jar:1.0.0
     const treeMarkerIndex = cleanLine.search(/(\+-|\\-)/);
     
-    if (treeMarkerIndex === -1) {
-       // 防止误判其他日志行，必须包含冒号
+    // 强制第一行为根节点
+    if (index === 0 && treeMarkerIndex === -1) {
        const parts = cleanLine.split(':');
        if(parts.length < 3) return;
 
@@ -37,8 +35,31 @@ export const parseMavenTree = (text: string): MavenNode[] => {
        };
        rootNodes.push(root);
        
-       // 重置堆栈
        stack.length = 0;
+       stack.push(root);
+       return;
+    }
+
+    // 如果不是第一行但没有 marker，可能是其他信息，跳过或视为根节点
+    if (treeMarkerIndex === -1) {
+       // 如果已经有根节点了，这种行通常是干扰信息，跳过
+       if (rootNodes.length > 0) return;
+
+       // 否则当作根节点
+       const parts = cleanLine.split(':');
+       if(parts.length < 3) return;
+       const root: MavenNode = {
+         id: `root-${index}`,
+         groupId: parts[0] || "unknown",
+         artifactId: parts[1] || "unknown",
+         type: parts[2] || "jar",
+         version: parts[3] || "unknown",
+         children: [],
+         rawLine: cleanLine,
+         depth: 0,
+         isConflict: false, isDuplicate: false, isManaged: false
+       };
+       rootNodes.push(root);
        stack.push(root);
        return;
     }

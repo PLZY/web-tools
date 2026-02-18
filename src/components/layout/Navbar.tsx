@@ -145,7 +145,7 @@ export function Navbar() {
         </div>
         <div className="flex items-center gap-2 md:gap-4">
           <Link
-            href="https://github.com/dogupup/devtools"
+            href="https://github.com/PLZY/web-tools"
             target="_blank"
             rel="noreferrer"
             className="text-zinc-400 hover:text-white transition-colors"

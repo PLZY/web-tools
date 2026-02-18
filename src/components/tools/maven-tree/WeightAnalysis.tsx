@@ -77,7 +77,7 @@ export function WeightAnalysis({ data }: WeightAnalysisProps) {
     title: {
       text: t('maven.weight.chart.group'),
       left: 'center',
-      textStyle: { color: isDark ? '#cbd5e1' : '#020617' }
+      textStyle: { color: 'var(--foreground)' }
     },
     tooltip: {
       trigger: 'item',
@@ -93,7 +93,7 @@ export function WeightAnalysis({ data }: WeightAnalysisProps) {
           position: 'outer',
           alignTo: 'labelLine',
           formatter: '{b}: {d}%',
-          color: isDark ? '#94a3b8' : '#475569'
+          color: 'var(--muted-foreground)'
         },
         labelLine: {
           show: true,
@@ -109,7 +109,7 @@ export function WeightAnalysis({ data }: WeightAnalysisProps) {
     title: {
       text: t('maven.weight.chart.scope'),
       left: 'center',
-      textStyle: { color: isDark ? '#cbd5e1' : '#020617' }
+      textStyle: { color: 'var(--foreground)' }
     },
     tooltip: {
       trigger: 'item',
@@ -125,7 +125,7 @@ export function WeightAnalysis({ data }: WeightAnalysisProps) {
           position: 'outer',
           alignTo: 'labelLine',
           formatter: '{b}: {d}%',
-          color: isDark ? '#94a3b8' : '#475569'
+          color: 'var(--muted-foreground)'
         },
         labelLine: {
           show: true

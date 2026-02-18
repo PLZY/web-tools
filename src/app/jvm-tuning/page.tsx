@@ -25,11 +25,11 @@ export default function JvmTuningPage() {
           {t('jvm.help.content')}
         </p>
 
-        <h3 className="text-xl font-bold mt-8 mb-4">{lang === 'zh' ? '核心调优维度' : 'Tuning Dimensions'}</h3>
+        <h3 className="text-xl font-bold mt-8 mb-4">{t('jvm.feature.title')}</h3>
         <ul className="list-disc pl-6 space-y-2 font-medium">
-          <li><strong>{lang === 'zh' ? '内存分配' : 'Memory sizing'}:</strong> -Xms = -Xmx.</li>
-          <li><strong>{lang === 'zh' ? 'GC 策略' : 'GC Strategy'}:</strong> G1, ZGC, Parallel.</li>
-          <li><strong>{lang === 'zh' ? '元空间' : 'Metaspace'}:</strong> MaxMetaspaceSize.</li>
+          <li><strong>{t('jvm.feature.memory')}:</strong> -Xms = -Xmx.</li>
+          <li><strong>{t('jvm.feature.gc')}:</strong> G1, ZGC, Parallel.</li>
+          <li><strong>{t('jvm.feature.metaspace')}:</strong> MaxMetaspaceSize.</li>
         </ul>
       </article>
     </div>

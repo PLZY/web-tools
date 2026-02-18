@@ -25,14 +25,14 @@ export default function SqlToPojoPage() {
           {t('sql.help.content')}
         </p>
 
-        <h3 className="text-xl font-bold mt-8 mb-4">{lang === 'zh' ? '核心特性' : 'Key Features'}</h3>
+        <h3 className="text-xl font-bold mt-8 mb-4">{t('sql.feature.title')}</h3>
         <ul className="list-disc pl-6 space-y-2 font-medium">
-          <li>{lang === 'zh' ? '多数据库支持：兼容 MySQL 和 PostgreSQL 语法。' : 'Multi-DB support: MySQL & PostgreSQL.'}</li>
-          <li>{lang === 'zh' ? '智能类型映射：自动将 SQL 类型映射为 Java 类型。' : 'Smart mapping: SQL types to Java types.'}</li>
-          <li>{lang === 'zh' ? 'Lombok 集成：告别样板代码。' : 'Lombok integration for cleaner code.'}</li>
+          <li>{t('sql.feature.multiDb')}</li>
+          <li>{t('sql.feature.mapping')}</li>
+          <li>{t('sql.feature.lombok')}</li>
         </ul>
 
-        <h3 className="text-xl font-bold mt-8 mb-4">{lang === 'zh' ? 'SQL 类型映射表' : 'Type Mapping Table'}</h3>
+        <h3 className="text-xl font-bold mt-8 mb-4">{t('sql.table.title')}</h3>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-border border rounded-lg">
             <thead>

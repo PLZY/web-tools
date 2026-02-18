@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://dogupup.com';
+  const baseUrl = 'https://tool.dogupup.com';
   
   // 静态路由
   const routes = [

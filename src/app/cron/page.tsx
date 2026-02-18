@@ -22,14 +22,14 @@ export default function CronPage() {
       <article className="prose dark:prose-invert max-w-none mt-12 border-t border-border pt-8 text-slate-900 dark:text-slate-200">
         <h2 className="text-2xl font-black mb-4">{t('cron.help.title')}</h2>
         
-        <h3 className="text-xl font-bold mt-8 mb-4">{lang === 'zh' ? '标准字段含义' : 'Standard Field Meaning'}</h3>
+        <h3 className="text-xl font-bold mt-8 mb-4">{t('cron.table.title')}</h3>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-border border rounded-lg">
             <thead>
               <tr className="bg-muted">
-                <th className="px-4 py-2 text-left text-xs font-black uppercase">{lang === 'zh' ? '位置' : 'Pos'}</th>
-                <th className="px-4 py-2 text-left text-xs font-black uppercase">{lang === 'zh' ? '字段' : 'Field'}</th>
-                <th className="px-4 py-2 text-left text-xs font-black uppercase">{lang === 'zh' ? '允许值' : 'Values'}</th>
+                <th className="px-4 py-2 text-left text-xs font-black uppercase">{t('cron.table.pos')}</th>
+                <th className="px-4 py-2 text-left text-xs font-black uppercase">{t('cron.table.field')}</th>
+                <th className="px-4 py-2 text-left text-xs font-black uppercase">{t('cron.table.values')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border font-mono text-sm">

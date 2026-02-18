@@ -14,7 +14,7 @@ export function Footer() {
           </a>
           . The source code is available on{" "}
           <a
-            href="https://github.com/dogupup/devtools"
+            href="https://github.com/PLZY/web-tools"
             target="_blank"
             rel="noreferrer"
             className="font-medium underline underline-offset-4 hover:text-zinc-300"

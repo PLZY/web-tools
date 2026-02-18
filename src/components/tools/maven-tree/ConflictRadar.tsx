@@ -71,7 +71,7 @@ export function ConflictRadar({ data }: ConflictRadarProps) {
     title: {
       text: t('maven.conflict.chart.title'),
       left: 'center',
-      textStyle: { color: isDark ? '#cbd5e1' : '#020617' }
+      textStyle: { color: 'var(--foreground)' }
     },
     tooltip: {
       trigger: 'axis',
@@ -92,13 +92,13 @@ export function ConflictRadar({ data }: ConflictRadarProps) {
       type: 'value',
       name: t('maven.conflict.chart.xAxis'),
       splitLine: { show: false },
-      axisLabel: { color: isDark ? '#94a3b8' : '#475569' }
+      axisLabel: { color: 'var(--muted-foreground)' }
     },
     yAxis: {
       type: 'category',
       data: conflictData.map(c => c.artifactId).reverse(),
-      axisLabel: { 
-        color: isDark ? '#cbd5e1' : '#020617',
+      axisLabel: {
+        color: 'var(--foreground)',
         fontWeight: 'bold'
       }
     },
@@ -123,7 +123,7 @@ export function ConflictRadar({ data }: ConflictRadarProps) {
           show: true,
           position: 'right',
           formatter: '{c} versions',
-          color: isDark ? '#cbd5e1' : '#020617',
+          color: 'var(--foreground)',
           fontWeight: 'bold'
         }
       }

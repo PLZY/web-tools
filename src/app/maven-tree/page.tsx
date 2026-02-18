@@ -46,28 +46,26 @@ export default function MavenTreePage() {
           </pre>
         </div>
 
-        <h3 className="text-xl font-bold mt-8 mb-4">{lang === 'zh' ? 'Maven 的依赖仲裁机制' : 'Maven Dependency Mediation'}</h3>
+        <h3 className="text-xl font-bold mt-8 mb-4">{t('maven.mechanism.title')}</h3>
         <p className="font-medium">
-          {lang === 'zh' 
-            ? 'Maven 处理依赖冲突主要遵循两个原则：' 
-            : 'Maven follows two main principles to resolve conflicts:'}
+          {t('maven.mechanism.desc')}
         </p>
         <ol className="list-decimal pl-6 space-y-2 font-medium">
           <li>
-            <strong>{lang === 'zh' ? '路径最近者优先' : 'Nearest Definition'}</strong>: {lang === 'zh' ? '如果依赖路径深度不同，Maven 会选择路径最短的那个版本。' : 'Maven picks the version with the shortest path.'}
+            <strong>{t('maven.mechanism.nearest.title')}</strong>: {t('maven.mechanism.nearest.desc')}
           </li>
           <li>
-            <strong>{lang === 'zh' ? '第一声明者优先' : 'First Declaration'}</strong>: {lang === 'zh' ? '如果依赖路径深度相同，Maven 会选择在 pom.xml 中最先声明的那个版本。' : 'If paths are equal, the first one declared in pom.xml wins.'}
+            <strong>{t('maven.mechanism.first.title')}</strong>: {t('maven.mechanism.first.desc')}
           </li>
         </ol>
 
-        <h3 className="text-xl font-bold mt-8 mb-4">{lang === 'zh' ? '如何解决依赖冲突？' : 'How to resolve?'}</h3>
+        <h3 className="text-xl font-bold mt-8 mb-4">{t('maven.resolve.title')}</h3>
         <p className="font-medium">
-          {lang === 'zh' ? '一旦通过本工具定位到冲突，您可以通过以下方式解决：' : 'Once located, you can resolve conflicts via:'}
+          {t('maven.resolve.desc')}
         </p>
         <ul className="list-disc pl-6 space-y-2 font-medium">
-          <li>{lang === 'zh' ? '排除依赖 (Exclusion)' : 'Exclusion in pom.xml'}</li>
-          <li>{lang === 'zh' ? '锁定版本 (Dependency Management)' : 'DependencyManagement in parent POM'}</li>
+          <li>{t('maven.resolve.exclusion')}</li>
+          <li>{t('maven.resolve.mgmt')}</li>
         </ul>
       </article>
     </div>

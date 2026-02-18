@@ -20,6 +20,9 @@ export const en = {
 
   // Home Page
   'home.title': 'DogUp DevTools',
+  'home.seo.title': 'DogUp DevTools | Developer\'s Toolbox',
+  'home.seo.description': 'Provides Maven dependency analyzer, Logback config generator, Cron parser, SQL to Java POJO, JVM tuning and other geek tools to help Java developers improve efficiency.',
+  'home.seo.keywords': 'Java Tools, Logback Config, Maven Dependency Analysis, Cron Expression, SQL to Java, JVM Tuning, DogUp',
   'home.subtitle': 'Java Efficiency Toolbox. Focused on resolving dependency conflicts, entity conversion, and JVM tuning.',
   'home.maven.title': 'Maven Analyzer',
   'home.maven.desc': 'Visual dependency analysis. Supports full path resolution for mvn dependency:tree to quickly locate version conflicts.',
@@ -53,6 +56,8 @@ export const en = {
   'maven.list.detail': 'Dependency Details',
   'maven.list.expandConflict': 'Locate Conflicts',
   'maven.list.collapseAll': 'Show All Paths',
+  'maven.list.locateConflict': 'Locate Conflicts',
+  'maven.list.showAll': 'Show All Paths',
   'maven.list.matchResult': 'Matched {n} results',
   'maven.conflict.title': 'Version Conflict Analysis',
   'maven.conflict.chart.title': 'Component Conflict Count (Top 10)',
@@ -71,6 +76,16 @@ export const en = {
   'maven.help.content': '"Jar Hell" is a classic issue. Complex dependencies can lead to NoSuchMethodError or ClassNotFoundException at runtime.',
   'maven.how.title': 'How to generate?',
   'maven.how.content': 'Run this in your project root:\n\nmvn dependency:tree\nOr for detailed verbose info:\n\nmvn dependency:tree -Dverbose',
+  'maven.mechanism.title': 'Maven Dependency Mediation',
+  'maven.mechanism.desc': 'Maven follows two rules for conflicts:',
+  'maven.mechanism.nearest.title': 'Nearest Definition',
+  'maven.mechanism.nearest.desc': 'Maven picks the version with the shortest path.',
+  'maven.mechanism.first.title': 'First Declaration',
+  'maven.mechanism.first.desc': 'If paths are equal, the first one declared in pom.xml wins.',
+  'maven.resolve.title': 'How to resolve?',
+  'maven.resolve.desc': 'Once located, you can resolve via:',
+  'maven.resolve.exclusion': 'Exclusion in pom.xml',
+  'maven.resolve.mgmt': 'DependencyManagement in parent POM',
 
   // JVM Tool
   'jvm.title': 'JVM Tuning Recipe',
@@ -87,6 +102,10 @@ export const en = {
   'jvm.result.title': 'Recommended JVM Params',
   'jvm.result.copy': 'Copy Params',
   'jvm.analysis.title': 'Parameter Analysis',
+  'jvm.feature.title': 'Tuning Dimensions',
+  'jvm.feature.memory': 'Memory sizing',
+  'jvm.feature.gc': 'GC Strategy',
+  'jvm.feature.metaspace': 'Metaspace',
 
   // Logback Tool
   'logback.title': 'Logback / Log4j2 Generator',
@@ -103,6 +122,10 @@ export const en = {
   'logback.config.maxFileSize': 'Max File Size',
   'logback.config.totalCap': 'Total Cap',
   'logback.config.async': 'Enable AsyncAppender (Recommended for Production)',
+  'logback.feature.title': 'Key Features',
+  'logback.feature.async': 'Async Logging',
+  'logback.feature.rolling': 'Rolling Policy',
+  'logback.feature.color': 'Colorful Console',
   'logback.config.appender': 'Appenders',
   'logback.appender.console': 'Console',
   'logback.appender.file': 'Rolling File',
@@ -138,14 +161,29 @@ export const en = {
   'cron.input.placeholder': 'Enter Cron (e.g. 0 0/5 * * * ?)',
   'cron.desc.title': 'Execution Logic',
   'cron.timeline.title': '7-Day Timeline',
+  'cron.table.title': 'Standard Field Meaning',
+  'cron.table.pos': 'Pos',
+  'cron.table.field': 'Field',
+  'cron.table.values': 'Values',
 
   // SQL Tool
   'sql.title': 'SQL to Java POJO',
+  'sql.feature.title': 'Key Features',
   'sql.desc': 'Convert CREATE TABLE DDL into Java entities with Lombok, JPA, and Swagger.',
   'sql.help.title': 'Why SQL to POJO?',
   'sql.help.content': 'Manually writing Entity classes is tedious. This tool parses DDL to extract table/field info and generate clean Java code.',
   'sql.input.placeholder': 'Paste CREATE TABLE DDL...',
   'sql.config.lombok': 'Use Lombok',
   'sql.config.swagger': 'Swagger (@Schema)',
-  'sql.result.title': 'Generated Java Code'
+  'sql.result.title': 'Generated Java Code',
+  'sql.feature.multiDb': 'Multi-DB support: MySQL & PostgreSQL.',
+  'sql.feature.mapping': 'Smart mapping: SQL types to Java types.',
+  'sql.feature.lombok': 'Lombok integration for cleaner code.',
+  'sql.table.title': 'Type Mapping Table',
+  'og.slogan': 'DogUp - Developer\'s Toolbox',
+  'maven.input.error': 'Please enter Maven dependency tree text',
+  'maven.parse.error': 'Failed to parse a valid dependency tree structure. Please check if the input format is \'mvn dependency:tree\' output',
+  'maven.parse.fail': 'Parse failed, please check the input format',
+  'maven.node.subtree_matches': 'Contains {n} matches',
+  'maven.node.contains_conflict': 'Contains conflict'
 };

@@ -25,11 +25,11 @@ export default function LogConfigPage() {
           {t('logback.help.content')}
         </p>
 
-        <h3 className="text-xl font-bold mt-8 mb-4">{lang === 'zh' ? '关键特性' : 'Key Features'}</h3>
+        <h3 className="text-xl font-bold mt-8 mb-4">{t('logback.feature.title')}</h3>
         <ul className="list-disc pl-6 space-y-2 font-medium">
-          <li><strong>{lang === 'zh' ? '异步日志' : 'Async Logging'}:</strong> AsyncAppender.</li>
-          <li><strong>{lang === 'zh' ? '滚动策略' : 'Rolling Policy'}:</strong> SizeAndTimeBased.</li>
-          <li><strong>{lang === 'zh' ? '彩色控制台' : 'Colorful Console'}:</strong> ANSI highlights.</li>
+          <li><strong>{t('logback.feature.async')}:</strong> AsyncAppender.</li>
+          <li><strong>{t('logback.feature.rolling')}:</strong> SizeAndTimeBased.</li>
+          <li><strong>{t('logback.feature.color')}:</strong> ANSI highlights.</li>
         </ul>
       </article>
     </div>

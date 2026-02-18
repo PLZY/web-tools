@@ -112,13 +112,16 @@ export default function HomeClient() {
           <div className="flex items-center justify-center gap-4 mb-8">
             <motion.div
               animate={{
-                y: [0, -15, 0],
-                rotate: [0, -5, 5, 0]
+                y: [0, -18, 0],
+                scaleX: [1.03, 0.98, 1.03],
+                scaleY: [0.98, 1.03, 0.98],
+                rotate: [0, -2, 2, 0]
               }}
               transition={{
-                duration: 2,
+                duration: 1.5,
                 repeat: Infinity,
-                ease: "easeInOut"
+                times: [0, 0.5, 1],
+                ease: "circOut"
               }}
             >
               <JumpingDog className="w-14 h-14 md:w-16 md:h-16" />

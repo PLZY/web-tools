@@ -20,6 +20,9 @@ export const zh = {
 
   // Home Page
   'home.title': '狗狗蹦跶工具站',
+  'home.seo.title': '狗狗蹦跶工具站 | DogUp DevTools - 开发者工具箱',
+  'home.seo.description': '提供 Maven 依赖排查、Logback 配置生成、Cron 表达式解析、SQL 转 Java POJO、JVM 参数调优等极客工具，助力 Java 开发者提升效率。',
+  'home.seo.keywords': 'Java工具, Logback配置, Maven依赖分析, Cron表达式, SQL转Java, JVM调优, DogUp',
   'home.subtitle': '“Maven 依赖树可视化，Cron 表达式解析器。让复杂的开发配置一眼看清。”',
   'home.maven.title': 'Maven 依赖排查',
   'home.maven.desc': '依赖关系可视化分析。支持全路径解析与版本冲突高亮，提供便捷的依赖树检索与排查体验。',
@@ -56,6 +59,8 @@ export const zh = {
   'maven.list.detail': '依赖树明细',
   'maven.list.expandConflict': '快速定位冲突',
   'maven.list.collapseAll': '显示全部路径',
+  'maven.list.locateConflict': '定位冲突',
+  'maven.list.showAll': '显示全部',
   'maven.list.matchResult': '匹配到 {n} 个结果',
   'maven.conflict.title': '版本冲突深度分析',
   'maven.conflict.chart.title': '组件冲突数量 (Top 10)',
@@ -74,6 +79,16 @@ export const zh = {
   'maven.help.content': '在 Java 项目开发中，"Jar Hell"（Jar 包地狱）是一个经典问题。当项目依赖复杂时，不同库可能会传递依赖同一个 Jar 包的不同版本，导致运行时出现 NoSuchMethodError 或 ClassNotFoundException。',
   'maven.how.title': '如何生成依赖树？',
   'maven.how.content': '要使用本工具，您首先需要在项目根目录下运行以下 Maven 命令：\n\nmvn dependency:tree\n或者，如果您想查看详细的冲突信息（包含被屏蔽的旧版本），可以使用：\n\nmvn dependency:tree -Dverbose',
+  'maven.mechanism.title': 'Maven 的依赖仲裁机制',
+  'maven.mechanism.desc': 'Maven 处理依赖冲突主要遵循两个原则：',
+  'maven.mechanism.nearest.title': '路径最近者优先',
+  'maven.mechanism.nearest.desc': '如果依赖路径深度不同，Maven 会选择路径最短的那个版本。',
+  'maven.mechanism.first.title': '第一声明者优先',
+  'maven.mechanism.first.desc': '如果依赖路径深度相同，Maven 会选择在 pom.xml 中最先声明的那个版本。',
+  'maven.resolve.title': '如何解决依赖冲突？',
+  'maven.resolve.desc': '一旦通过本工具定位到冲突，您可以通过以下方式解决：',
+  'maven.resolve.exclusion': '排除依赖 (Exclusion)',
+  'maven.resolve.mgmt': '锁定版本 (Dependency Management)',
 
   // JVM Tool
   'jvm.title': 'JVM 调优配方 (JVM Tuning Recipe)',
@@ -90,6 +105,10 @@ export const zh = {
   'jvm.result.title': '推荐启动参数',
   'jvm.result.copy': '复制参数',
   'jvm.analysis.title': '参数深度解析',
+  'jvm.feature.title': '核心调优维度',
+  'jvm.feature.memory': '内存分配',
+  'jvm.feature.gc': 'GC 策略',
+  'jvm.feature.metaspace': '元空间',
 
   // Logback Tool
   'logback.title': 'Logback / Log4j2 配置生成',
@@ -106,6 +125,10 @@ export const zh = {
   'logback.config.maxFileSize': '单文件最大大小',
   'logback.config.totalCap': '总大小上限 (Total Cap)',
   'logback.config.async': '启用异步日志 (AsyncAppender) - 推荐生产环境开启',
+  'logback.feature.title': '关键特性',
+  'logback.feature.async': '异步日志',
+  'logback.feature.rolling': '滚动策略',
+  'logback.feature.color': '彩色控制台',
   'logback.result.title': '生成的 XML 配置',
   'logback.preview.title': '配置文件预览',
   'logback.xml.appName': '应用名称',
@@ -136,6 +159,10 @@ export const zh = {
   'cron.input.placeholder': '输入 Cron 表达式 (如: 0 0/5 * * * ?)',
   'cron.desc.title': '执行逻辑说明',
   'cron.timeline.title': '未来 7 次执行时间轴',
+  'cron.table.title': '标准字段含义',
+  'cron.table.pos': '位置',
+  'cron.table.field': '字段',
+  'cron.table.values': '允许值',
 
   // SQL Tool
   'sql.title': 'SQL 转 Java POJO 生成器',
@@ -150,5 +177,16 @@ export const zh = {
   'sql.config.author': '作者',
   'sql.config.jpa': '使用 JPA 注解',
   'sql.config.validation': '使用 Jakarta 校验',
-  'sql.result.regen': '重新生成'
+  'sql.result.regen': '重新生成',
+  'sql.feature.title': '核心特性',
+  'sql.feature.multiDb': '多数据库支持：兼容 MySQL 和 PostgreSQL 语法。',
+  'sql.feature.mapping': '智能类型映射：自动将 SQL 类型映射为 Java 类型。',
+  'sql.feature.lombok': 'Lombok 集成：告别样板代码。',
+  'sql.table.title': 'SQL 类型映射表',
+  'og.slogan': 'DogUp - 开发者工具箱',
+  'maven.input.error': '请输入 Maven 依赖树文本',
+  'maven.parse.error': '未能解析出有效的依赖树结构，请检查输入格式是否为 \'mvn dependency:tree\' 的输出',
+  'maven.parse.fail': '解析出错，请检查输入格式',
+  'maven.node.subtree_matches': '内含 {n} 个匹配',
+  'maven.node.contains_conflict': '内含冲突'
 };

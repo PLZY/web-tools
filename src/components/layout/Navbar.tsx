@@ -110,9 +110,9 @@ export function Navbar() {
 
   const navItems = [
     { href: "/maven-tree", label: t('nav.maven'), icon: Package },
-    { href: "/log-config", label: t('nav.logback'), icon: FileText },
     { href: "/cron", label: t('nav.cron'), icon: Clock },
-    { href: "/sql-to-pojo", label: t('nav.sql'), icon: Database },
+    { href: "/log-config", label: t('nav.logback'), icon: FileText },
+    { href: "/json-lab", label: t('nav.jsonLab'), icon: Database },
     { href: "/jvm-tuning", label: t('nav.jvm'), icon: Cpu },
   ];
 
@@ -163,7 +163,7 @@ export function Navbar() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => setLang('zh')} className={lang === 'zh' ? 'bg-accent' : ''}>
-                中文 (Chinese)
+                简体中文
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setLang('en')} className={lang === 'en' ? 'bg-accent' : ''}>
                 English

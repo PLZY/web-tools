@@ -4,7 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertCircle, CheckCircle2, ChevronRight, ChevronDown, Search, Trash2, BarChart3, Network, AlertTriangle, Info } from 'lucide-react';
+import { AlertCircle, CheckCircle2, ChevronRight, ChevronDown, Search, Trash2, BarChart3, Network, AlertTriangle, Info, Copy, Check, Terminal, FolderOpen, Play } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DependencyTreeChart } from './maven-tree/DependencyTreeChart';
@@ -13,6 +13,7 @@ import { WeightAnalysis } from './maven-tree/WeightAnalysis';
 import { MavenNode } from './maven-tree/types';
 import { parseMavenTree } from './maven-tree/parser';
 import { useTranslation } from '@/lib/i18n';
+import { cn } from '@/lib/utils';
 
 // --- Components ---
 
@@ -230,6 +231,7 @@ export default function MavenTree() {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showOnlyConflicts, setShowOnlyConflicts] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
 
   // 搜索结果计数
   const searchMatchCount = useMemo(() => {
@@ -306,6 +308,12 @@ export default function MavenTree() {
       setError(null);
   };
 
+
+  const handleCopyCommand = () => {
+    navigator.clipboard.writeText('mvn dependency:tree -Dverbose');
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 1500);
+  };
 
   const loadExample = () => {
       const example = `[INFO] com.zhangdagou:fight-ai:jar:0.0.1
@@ -792,11 +800,59 @@ export default function MavenTree() {
 
   return (
     <div className="space-y-6">
+      {/* 快速上手指南 - 极限压缩水平步骤条 */}
+      <div className="bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2 flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-6 flex-1 min-w-[300px]">
+          {/* Step 1 */}
+          <div className="flex items-center gap-2">
+            <span className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-500">1</span>
+            <span className="text-xs font-medium text-slate-600 dark:text-slate-400">{t('maven.guide.step1.content')}</span>
+          </div>
+          <div className="h-4 w-px bg-slate-200 dark:border-slate-800 hidden md:block"></div>
+          {/* Step 2 */}
+          <div className="flex items-center gap-2">
+            <span className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-500">2</span>
+            <span className="text-xs font-medium text-slate-600 dark:text-slate-400">{t('maven.guide.step2.content')}</span>
+          </div>
+          <div className="h-4 w-px bg-slate-200 dark:border-slate-800 hidden md:block"></div>
+          {/* Step 3 */}
+          <div className="flex items-center gap-3 flex-1">
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <span className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-500">3</span>
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-400">{t('maven.guide.step3.content')}</span>
+            </div>
+            <div className="flex-1 flex items-center gap-2 bg-slate-100 dark:bg-slate-950 px-2 py-1 rounded border border-slate-200 dark:border-slate-800 overflow-hidden min-w-[200px]">
+              <code className="text-[10px] font-mono text-slate-500 truncate flex-1">mvn dependency:tree -Dverbose</code>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "h-6 px-2 text-[10px] font-bold transition-all duration-300",
+                  isCopied ? "text-emerald-500 bg-emerald-500/10" : "text-slate-900 dark:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-800"
+                )}
+                onClick={handleCopyCommand}
+              >
+                {isCopied ? <Check className="w-3 h-3 mr-1" /> : <Copy className="w-3 h-3 mr-1" />}
+                {isCopied ? t('common.copied') : t('common.copy')}
+              </Button>
+            </div>
+          </div>
+        </div>
+        
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={loadExample}
+          className="h-8 text-xs font-bold px-3 border-slate-300 dark:border-slate-700 hover:bg-white dark:hover:bg-slate-800 shrink-0"
+        >
+          {t('common.example')}
+        </Button>
+      </div>
+
       <Card className="bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-800 shadow-sm">
         <CardHeader>
-          <CardTitle className="flex justify-between items-center text-slate-950 dark:text-slate-50">
-             <span>{t('maven.input.title')}</span>
-             <Button variant="ghost" size="sm" onClick={loadExample} className="text-slate-600 dark:text-slate-400 hover:text-slate-950">{t('common.example')}</Button>
+          <CardTitle className="text-slate-950 dark:text-slate-50">
+             {t('maven.input.title')}
           </CardTitle>
         </CardHeader>
         <CardContent>

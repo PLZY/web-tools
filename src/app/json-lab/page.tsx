@@ -1,23 +1,24 @@
 "use client";
 
-import JvmTuning from "@/components/tools/JvmTuning";
+import JsonLab from "@/components/tools/JsonLab";
 import { useTranslation } from "@/lib/i18n";
 
-export default function JvmTuningPage() {
-  const { t } = useTranslation();
+export default function JsonLabPage() {
+  const { t, lang } = useTranslation();
 
   return (
     <div className="container mx-auto py-8 space-y-8">
       <div className="space-y-4">
         <h1 className="text-3xl font-extrabold tracking-tight text-slate-950 dark:text-slate-50">
-          {t('jvm.title')}
+          {t("jsonLab.title")}
         </h1>
         <p className="text-muted-foreground text-lg font-medium">
-          {t('jvm.desc')}
+          {t("jsonLab.desc")}
         </p>
       </div>
 
-      <JvmTuning />
+      <JsonLab />
+
     </div>
   );
 }

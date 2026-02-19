@@ -4,7 +4,7 @@ import CronTranslator from "@/components/tools/CronTranslator";
 import { useTranslation } from "@/lib/i18n";
 
 export default function CronPage() {
-  const { t, lang } = useTranslation();
+  const { t } = useTranslation();
 
   return (
     <div className="container mx-auto py-8 space-y-8">
@@ -19,27 +19,38 @@ export default function CronPage() {
 
       <CronTranslator />
 
-      <article className="prose dark:prose-invert max-w-none mt-12 border-t border-border pt-8 text-slate-900 dark:text-slate-200">
-        <h2 className="text-2xl font-black mb-4">{t('cron.help.title')}</h2>
+      <article className="mt-12 space-y-8">
+        <h2 className="text-2xl font-black text-slate-950 dark:text-slate-50 flex items-center gap-2">
+          <div className="w-2 h-8 bg-red-500 rounded-full"></div>
+          {t('cron.article.title')}
+        </h2>
         
-        <h3 className="text-xl font-bold mt-8 mb-4">{t('cron.table.title')}</h3>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-border border rounded-lg">
-            <thead>
-              <tr className="bg-muted">
-                <th className="px-4 py-2 text-left text-xs font-black uppercase">{t('cron.table.pos')}</th>
-                <th className="px-4 py-2 text-left text-xs font-black uppercase">{t('cron.table.field')}</th>
-                <th className="px-4 py-2 text-left text-xs font-black uppercase">{t('cron.table.values')}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border font-mono text-sm">
-              <tr><td className="px-4 py-2">1</td><td className="px-4 py-2">Minute</td><td className="px-4 py-2">0-59</td></tr>
-              <tr><td className="px-4 py-2">2</td><td className="px-4 py-2">Hour</td><td className="px-4 py-2">0-23</td></tr>
-              <tr><td className="px-4 py-2">3</td><td className="px-4 py-2">Day</td><td className="px-4 py-2">1-31</td></tr>
-              <tr><td className="px-4 py-2">4</td><td className="px-4 py-2">Month</td><td className="px-4 py-2">1-12</td></tr>
-            </tbody>
-          </table>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">{t('cron.article.h1')}</h3>
+            <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+              {t('cron.article.p2')}
+            </p>
+          </div>
+
+          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">{t('cron.article.h2')}</h3>
+            <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+              {t('cron.article.p3')}
+            </p>
+          </div>
+
+          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">{t('cron.article.h3')}</h3>
+            <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+              {t('cron.article.p4')}
+            </p>
+          </div>
         </div>
+
+        <p className="text-center text-sm text-slate-400 italic pt-4">
+          {t('cron.article.footer')}
+        </p>
       </article>
     </div>
   );

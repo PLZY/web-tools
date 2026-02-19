@@ -157,26 +157,26 @@ export default function HomeClient() {
           />
 
           {/* 第二行：三个工具 (各占 2 列) */}
-          <ToolCard 
+          <ToolCard
             className="md:col-span-2 border-slate-200 dark:border-slate-800"
-            title={t('home.sql.title')} 
-            description={t('home.sql.desc')}
-            href="/sql-to-pojo" 
-            icon={<Database className="w-6 h-6"/>} 
-          />
-          <ToolCard 
-            className="md:col-span-2 border-slate-200 dark:border-slate-800"
-            title={t('home.jvm.title')} 
-            description={t('home.jvm.desc')}
-            href="/jvm-tuning" 
-            icon={<Cpu className="w-6 h-6"/>} 
-          />
-          <ToolCard 
-            className="md:col-span-2 border-slate-200 dark:border-slate-800"
-            title={t('home.logback.title')} 
+            title={t('home.logback.title')}
             description={t('home.logback.desc')}
-            href="/log-config" 
-            icon={<FileText className="w-6 h-6"/>} 
+            href="/log-config"
+            icon={<FileText className="w-6 h-6"/>}
+          />
+          <ToolCard
+            className="md:col-span-2 border-slate-200 dark:border-slate-800"
+            title={t('home.jsonLab.title')}
+            description={t('home.jsonLab.desc')}
+            href="/json-lab"
+            icon={<Database className="w-6 h-6"/>}
+          />
+          <ToolCard
+            className="md:col-span-2 border-slate-200 dark:border-slate-800"
+            title={t('home.jvm.title')}
+            description={t('home.jvm.desc')}
+            href="/jvm-tuning"
+            icon={<Cpu className="w-6 h-6"/>}
           />
         </div>
       </section>

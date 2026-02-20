@@ -109,10 +109,10 @@ export function Navbar() {
   const { lang, setLang, t } = useTranslation();
 
   const navItems = [
-    { href: "/maven-tree", label: t('nav.maven'), icon: Package },
+    { href: "/json-lab", label: t('nav.jsonLab'), icon: Database },
     { href: "/cron", label: t('nav.cron'), icon: Clock },
     { href: "/log-config", label: t('nav.logback'), icon: FileText },
-    { href: "/json-lab", label: t('nav.jsonLab'), icon: Database },
+    { href: "/maven-tree", label: t('nav.maven'), icon: Package },
     { href: "/jvm-tuning", label: t('nav.jvm'), icon: Cpu },
   ];
 

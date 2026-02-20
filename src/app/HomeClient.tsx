@@ -140,23 +140,23 @@ export default function HomeClient() {
       {/* 2. Bento Grid 布局的工具矩阵 (2+3 结构) */}
       <section className="w-full max-w-7xl px-6 py-16">
         <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
-          {/* 第一行：双核心 (各占 3 列) */}
+          {/* 第一行：双核心 (各占 3 列) - JSON Lab 在前，Cron 在后 */}
           <ToolCard 
             className="md:col-span-3 border-slate-200 dark:border-slate-800"
-            title={t('home.maven.title')} 
-            description={t('home.maven.desc')}
-            href="/maven-tree"
-            icon={<Search className="w-8 h-8"/>}
+            title={t('home.jsonLab.title')} 
+            description={t('home.jsonLab.desc')}
+            href="/json-lab"
+            icon={<Database className="w-8 h-8"/>}
           />
           <ToolCard 
             className="md:col-span-3 border-slate-200 dark:border-slate-800"
             title={t('home.cron.title')} 
             description={t('home.cron.desc')}
-            href="/cron" 
+            href="/cron"
             icon={<Clock className="w-8 h-8"/>} 
           />
 
-          {/* 第二行：三个工具 (各占 2 列) */}
+          {/* 第二行：三个工具 */}
           <ToolCard
             className="md:col-span-2 border-slate-200 dark:border-slate-800"
             title={t('home.logback.title')}
@@ -166,10 +166,10 @@ export default function HomeClient() {
           />
           <ToolCard
             className="md:col-span-2 border-slate-200 dark:border-slate-800"
-            title={t('home.jsonLab.title')}
-            description={t('home.jsonLab.desc')}
-            href="/json-lab"
-            icon={<Database className="w-6 h-6"/>}
+            title={t('home.maven.title')}
+            description={t('home.maven.desc')}
+            href="/maven-tree"
+            icon={<Search className="w-6 h-6"/>}
           />
           <ToolCard
             className="md:col-span-2 border-slate-200 dark:border-slate-800"

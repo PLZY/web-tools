@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/lib/i18n";
 
 interface ToolCardProps {
   title: string;
@@ -24,6 +25,8 @@ export function ToolCard({
   className,
   descriptionDetail,
 }: ToolCardProps) {
+  const { t } = useTranslation();
+
   return (
     <motion.div
       whileHover={{ scale: 1.02, y: -5 }}
@@ -59,7 +62,7 @@ export function ToolCard({
         </div>
         
         <div className="mt-4 flex items-center text-sm font-semibold text-primary opacity-0 transition-opacity group-hover:opacity-100">
-          开始使用
+          {t("jsonLab.startUsing")}
           <svg
             className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1"
             fill="none"

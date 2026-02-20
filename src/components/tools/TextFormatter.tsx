@@ -88,7 +88,7 @@ export default function TextFormatter() {
   const handleGeneratePojo = useCallback(() => {
     try {
       const parsed = JSON.parse(inputText);
-      const result = generateJavaPojo(parsed, "Root");
+      const result = generateJavaPojo(parsed);
       setOutputText(result);
     } catch (e: any) {
       toast.error("生成POJO失败: " + e.message);

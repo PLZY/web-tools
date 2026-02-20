@@ -17,8 +17,7 @@
 <a name="简体中文"></a>
 ## 简体中文
 
-**DogUpUp DevTools** 是一款专为程序员打造的极简、硬核在线工具箱。我们追求极致的性能与 SEO，致力于在有限的硬件资源（1C2G VPS）下提供最流畅的开发辅助体验。
-
+**DogUpUp DevTools** 是一款专为提高开发效率打造的极简，易用的在线工具箱
 ---
 
 ### 🚀 核心功能清单
@@ -111,7 +110,7 @@ npm run build
 <a name="english"></a>
 ## English
 
-**DogUpUp DevTools** is a minimalist, hardcore online toolbox designed for programmers to enhance development efficiency. We pursue ultimate performance and SEO, committed to providing the smoothest development assistance experience with limited hardware resources (1C2G VPS).
+**DogUpUp DevTools** A simple, intuitive online toolkit built for developer productivity.
 
 ---
 

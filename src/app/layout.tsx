@@ -10,14 +10,14 @@ import { TranslationProvider } from "@/lib/i18n";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://tool.dogupup.com'),
-  title: "狗狗蹦跶工具站 | DogUp DevTools - 开发者工具箱",
-  description: "提供 Maven 依赖排查、Logback 配置生成、Cron 表达式解析、SQL 转 Java POJO、JVM 参数调优等极客工具，助力 Java 开发者提升效率。",
-  keywords: ["Java工具", "Logback配置", "Maven依赖分析", "Cron表达式", "SQL转Java", "JVM调优", "DogUp"],
+  metadataBase: new URL('https://dogupup.com'),
+  title: "DogUp DevTools", // 通用品牌名
+  description: "DogUp DevTools",
+  keywords: ["Java Tools", "Maven Dependency Analysis", "Cron Expression", "JSON Parser", "JVM Tuning", "Java工具", "Maven依赖分析", "Cron表达式", "JSON解析", "JVM调优"],
   openGraph: {
-    title: "狗狗蹦跶工具站 | DogUp DevTools - 开发者工具箱",
-    description: "提供 Maven 依赖排查、Logback 配置生成、Cron 表达式解析、SQL 转 Java POJO、JVM 参数调优等极客工具，助力 Java 开发者提升效率。",
-    url: "https://tool.dogupup.com",
+    title: "DogUp DevTools",
+    description: "DogUp DevTools",
+    url: "https://dogupup.com",
     siteName: "DogUp DevTools",
     images: [
       {
@@ -27,13 +27,14 @@ export const metadata: Metadata = {
         alt: "DogUp DevTools",
       },
     ],
-    locale: "zh_CN",
+    locale: "en_US",
+    alternateLocale: "zh_CN",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "狗狗蹦跶工具站 | DogUp DevTools - 开发者工具箱",
-    description: "提供 Maven 依赖排查、Logback 配置生成、Cron 表达式解析、SQL 转 Java POJO、JVM 参数调优等极客工具，助力 Java 开发者提升效率。",
+    title: "DogUp DevTools",
+    description: "DogUp DevTools",
     images: ["/opengraph-image"],
   },
 };
@@ -44,7 +45,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-CN" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="icon" href="/dog.svg" type="image/svg+xml" />
         <meta name="google-adsense-account" content="ca-pub-8178726174601950" />

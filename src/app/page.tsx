@@ -2,14 +2,27 @@ import { Metadata } from 'next';
 import HomeClient from './HomeClient';
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://tool.dogupup.com'),
-  title: 'DogUp DevTools | Java 效率工具集 - Maven 依赖排查 / SQL 转 Java / JVM 模板',
-  description: '专为 Java 开发者设计的效率工具集。提供 Maven 依赖树可视化分析、SQL 转 POJO、JVM 启动参数模板及 Cron 表达式解析，解决开发中的日常痛点。',
-  keywords: 'DogUp, Maven 依赖排查, SQL 转 Java, JVM 调优, Cron 解析, Java 开发工具',
+  metadataBase: new URL('https://dogupup.com'),
+  title: 'DogUp DevTools | 开发者工具箱',
+  description: 'DogUp DevTools 专为开发者设计，提供 Maven 依赖冲突分析、Cron 表达式解析、JSON 格式化、JVM 调优，日志配置等工具。DogUp DevTools provides Maven dependency analysis, Cron expression parsing, JSON formatting, and JVM tuning，Log config for developers.',
+  keywords: [
+    'DogUp', 'Online DevTools', '在线工具站',
+    'Maven Dependency Analysis', 'Maven 依赖排查', 'Maven 依赖树',
+    'Cron Expression', 'Cron 表达式', 'Cron Parser',
+    'JSON Lab', 'JSON Parser', 'JSON Format', 'JSON 解析', 'JSON 格式化',
+    'JVM Tuning', 'JVM 调优', 'JVM 参数',
+    'Logback Config', 'Logback 配置', 'Log4j2 Config','Log4j2 配置',
+    'POJO Generator',
+    'Developer Tools Online', '在线开发工具',
+    'Java Developer Tools', 'Java 开发工具'
+  ],
   openGraph: {
-    title: 'DogUp DevTools | Java 效率工具集',
-    description: '专注解决依赖冲突、实体转换、参数调优等日常痛点。',
-    images: ['/og-image.png'],
+    title: 'DogUp DevTools | 开发者工具箱',
+    description: 'DogUp DevTools 专为开发者设计，提供 Maven 依赖冲突分析、Cron 表达式解析、JSON 格式化、JVM 调优，日志配置等工具',
+    images: ['/opengraph-image'],
+    locale: 'zh_CN',
+    alternateLocale: ['en_US'],
+    type: 'website',
   }
 };
 

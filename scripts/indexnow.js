@@ -1,4 +1,4 @@
-const host = 'tool.dogupup.com';
+const host = 'dogupup.com';
 const key = '3ea8572ca3c542fab00d5d21b36008c9';
 const keyLocation = `https://${host}/${key}.txt`;
 

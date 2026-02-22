@@ -23,15 +23,27 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
   const [lang, setLang] = useState<Language>('zh');
 
   useEffect(() => {
+    // 优先读取本地存储
     const saved = localStorage.getItem('lang') as Language;
     if (saved && (saved === 'zh' || saved === 'en')) {
       setLang(saved);
+      return;
+    }
+    
+    // 其次根据浏览器语言自动设置
+    const browserLang = navigator.language.toLowerCase();
+    if (browserLang.startsWith('zh')) {
+      setLang('zh');
+    } else {
+      setLang('en');
     }
   }, []);
 
   const handleSetLang = (newLang: Language) => {
     setLang(newLang);
     localStorage.setItem('lang', newLang);
+    // 更新 HTML lang 属性
+    document.documentElement.lang = newLang === 'zh' ? 'zh-CN' : 'en';
   };
 
   const t = (key: string) => {

@@ -3,8 +3,8 @@
 ## 1. 项目背景与愿景
 - **项目名称**：DogUpUp DevTools (dogupup.com)
 - **核心定位**：极简、硬核的程序员在线工具箱。
-- **生存环境**：部署于 1C2G 的海外 VPS (Ubuntu 22.04)，必须极度节省内存和 CPU。
-- **SEO 策略**：不备案，走 Google 搜索，追求 Server-Side Rendering (SSR) 以实现极致收录。
+- **生存环境**：部署于 1C2G服务器 (Ubuntu 22.04)，必须节省内存和 CPU。
+- **SEO 策略**：走 Google 搜索，追求 Server-Side Rendering (SSR) 以实现极致收录。
 
 ## 2. 技术栈 (The Ultra-Lean Stack)
 - **全栈框架**：Next.js 14+ (App Router) - 必须使用 TypeScript。

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo, type MutableRefObject } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Copy, XCircle, Zap, ArrowLeftRight,
@@ -18,9 +18,23 @@ import {
   generateGoStruct, generateProtobuf,
   parseCurl, generateCurl, CurlParseResult,
 } from "@/components/tools/json-lab/json-utils";
-import Editor from "@monaco-editor/react";
+import Editor, { loader } from "@monaco-editor/react";
 import dynamic from "next/dynamic";
 import { debounce } from "lodash";
+
+// 预加载 Monaco 资源（仅客户端）
+if (typeof window !== "undefined") {
+  loader.init();
+}
+
+// 编辑器加载占位
+const EditorLoading = () => (
+  <div className="flex items-center justify-center h-full w-full text-sm text-muted-foreground animate-pulse">
+    <div className="flex flex-col items-center gap-2">
+      <div className="w-5 h-5 border-2 border-muted-foreground/30 border-t-muted-foreground rounded-full animate-spin" />
+    </div>
+  </div>
+);
 import {
   Select, SelectContent, SelectItem,
   SelectTrigger, SelectValue,
@@ -47,6 +61,9 @@ export default function JsonLab() {
   const { t } = useTranslation();
   const { theme } = useTheme();
   const parsedRef = useRef<any>(null);
+  const jsonEditorRef = useRef<any>(null);
+  const curlEditorRef = useRef<any>(null);
+  const isProgrammaticChange = useRef(false);
 
   // 主题：动态获取
   const monacoTheme = theme === "dark" ? "vs-dark" : "light";
@@ -95,6 +112,16 @@ export default function JsonLab() {
 
   // 按钮交互状态
   const [copiedTab, setCopiedTab] = useState<string | null>(null);
+
+  // ── 编辑器辅助：程序化设置值 ──────────────────────────────────────────────
+  const setEditorValue = useCallback((editorRef: MutableRefObject<any>, value: string, stateSetter: (v: string) => void) => {
+    isProgrammaticChange.current = true;
+    stateSetter(value);
+    if (editorRef.current) {
+      editorRef.current.setValue(value);
+    }
+    isProgrammaticChange.current = false;
+  }, []);
 
   // ── 解析 JSON（防抖 300ms）────────────────────────────────────────────────
 
@@ -208,21 +235,19 @@ export default function JsonLab() {
 
   const handleMinify = useCallback(() => {
     if (isMinified) {
-      // 展开：恢复到格式化状态
       if (parsedRef.current) {
         const expanded = formatJson(parsedRef.current);
-        setJsonInput(expanded);
+        setEditorValue(jsonEditorRef, expanded, setJsonInput);
         setFormattedJson(expanded);
       }
       setIsMinified(false);
     } else {
-      // 压缩：左侧和右侧同时压缩
       const minified = minifyJson(jsonInput);
-      setJsonInput(minified);
+      setEditorValue(jsonEditorRef, minified, setJsonInput);
       setFormattedJson(minified);
       setIsMinified(true);
     }
-  }, [jsonInput, isMinified]);
+  }, [jsonInput, isMinified, setEditorValue]);
 
   // ── 驼峰 ↔ 下划线 自动转换 ─────────────────────────────────────────────
 
@@ -257,8 +282,8 @@ export default function JsonLab() {
     } else {
       return;
     }
-    setJsonInput(formatJson(converted));
-  }, [hasSnakeCase, hasCamelCase]);
+    setEditorValue(jsonEditorRef, formatJson(converted), setJsonInput);
+  }, [hasSnakeCase, hasCamelCase, setEditorValue]);
 
   // ── 复制 ────────────────────────────────────────────────────────────────
 
@@ -273,8 +298,8 @@ export default function JsonLab() {
   // ── 清空 ────────────────────────────────────────────────────────────────
 
   const handleClear = useCallback(() => {
-    setJsonInput("");
-    setCurlInput("");
+    setEditorValue(jsonEditorRef, "", setJsonInput);
+    setEditorValue(curlEditorRef, "", setCurlInput);
     setFormattedJson("");
     setJsonError(null);
     setCurlParsed(null);
@@ -284,7 +309,7 @@ export default function JsonLab() {
     setJsonPath("$");
     setIsRepaired(false);
     setIsMinified(false);
-  }, []);
+  }, [setEditorValue]);
 
   // ── 过滤树 ────────────────────────────────────────────────────────────
 
@@ -410,8 +435,14 @@ export default function JsonLab() {
               height="100%"
               language="json"
               theme={monacoTheme}
-              value={jsonInput}
-              onChange={(v) => setJsonInput(v || "")}
+              defaultValue={jsonInput}
+              loading={<EditorLoading />}
+              onMount={(editor) => { jsonEditorRef.current = editor; }}
+              onChange={(v) => {
+                if (!isProgrammaticChange.current) {
+                  setJsonInput(v || "");
+                }
+              }}
               options={{
                 automaticLayout: true,
                 minimap: { enabled: false },
@@ -432,8 +463,14 @@ export default function JsonLab() {
               height="100%"
               language="shell"
               theme={monacoTheme}
-              value={curlInput}
-              onChange={(v) => setCurlInput(v || "")}
+              defaultValue={curlInput}
+              loading={<EditorLoading />}
+              onMount={(editor) => { curlEditorRef.current = editor; }}
+              onChange={(v) => {
+                if (!isProgrammaticChange.current) {
+                  setCurlInput(v || "");
+                }
+              }}
               options={{
                 automaticLayout: true,
                 minimap: { enabled: false },
@@ -502,7 +539,7 @@ export default function JsonLab() {
                 onClick={handleMinify}
               >
                 {isMinified ? <Expand className="h-3 w-3 mr-1" /> : <Minimize2 className="h-3 w-3 mr-1" />}
-                {isMinified ? "展开" : t("jsonLab.minify.label")}
+                {isMinified ? t("jsonLab.expand.label") : t("jsonLab.minify.label")}
               </Button>
             )}
 
@@ -648,6 +685,7 @@ export default function JsonLab() {
                 language={transformLang}
                 theme={monacoTheme}
                 value={transformedOutput}
+                loading={<EditorLoading />}
                 options={{
                   readOnly: true,
                   minimap: { enabled: false },

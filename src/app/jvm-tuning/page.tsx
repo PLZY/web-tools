@@ -1,10 +1,17 @@
 "use client";
 
 import JvmTuning from "@/components/tools/JvmTuning";
+import { ToolFAQ } from "@/components/tools/ToolFAQ";
 import { useTranslation } from "@/lib/i18n";
 
 export default function JvmTuningPage() {
   const { t } = useTranslation();
+
+  const faqs = [
+    { q: t('faq.jvm.q1'), a: t('faq.jvm.a1') },
+    { q: t('faq.jvm.q2'), a: t('faq.jvm.a2') },
+    { q: t('faq.jvm.q3'), a: t('faq.jvm.a3') },
+  ];
 
   return (
     <div className="container mx-auto py-8 space-y-8">
@@ -18,6 +25,8 @@ export default function JvmTuningPage() {
       </div>
 
       <JvmTuning />
+
+      <ToolFAQ faqs={faqs} />
     </div>
   );
 }

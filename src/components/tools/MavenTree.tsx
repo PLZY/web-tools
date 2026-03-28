@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertCircle, CheckCircle2, ChevronRight, ChevronDown, Search, Trash2, BarChart3, Network, AlertTriangle, Info, Copy, Check, Terminal, FolderOpen, Play } from 'lucide-react';
+import { AlertCircle, CheckCircle2, ChevronRight, ChevronDown, ChevronUp, Search, Trash2, BarChart3, AlertTriangle, Info, Copy, Check, Terminal, FolderOpen, Play } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DependencyTreeChart } from './maven-tree/DependencyTreeChart';
@@ -107,35 +107,30 @@ const TreeNode = ({
   const isDuplicate = node.isDuplicate;
   const isManaged = node.isManaged;
   
-  // 样式计算 (IDEA 风格高对比度)
-  let textColor = 'text-slate-950 dark:text-slate-50';
-  let bgColor = 'bg-white dark:bg-transparent';
-  let borderColor = 'border-transparent';
+  // 样式计算
+  let textColor = 'text-slate-700 dark:text-slate-300';
+  let bgColor = '';
   let ringStyle = '';
 
   if (matchesSearch) {
-    textColor = 'text-slate-950';
-    bgColor = 'bg-yellow-400';
-    ringStyle = 'ring-2 ring-yellow-600 ring-offset-1';
+    bgColor = 'bg-yellow-100 dark:bg-yellow-900/30';
+    ringStyle = 'ring-2 ring-yellow-400 ring-offset-1';
+    textColor = 'text-slate-900 dark:text-slate-100';
   } else if (isDanger) {
-    textColor = 'text-red-700 dark:text-red-400 font-bold';
-    bgColor = 'bg-red-500/10 dark:bg-red-900/20';
-    borderColor = 'border-red-500/50 border-2';
-    ringStyle = 'animate-pulse';
+    bgColor = 'bg-red-50 dark:bg-red-950/20';
+    textColor = 'text-red-700 dark:text-red-400';
   } else if (isDuplicate) {
-    textColor = 'text-slate-500 dark:text-slate-500 italic line-through decoration-slate-400/50';
+    textColor = 'text-slate-400 dark:text-slate-600';
   } else if (isManaged) {
-    textColor = 'text-amber-700 dark:text-amber-400 font-bold';
-  } else if (hasMatchingChild) {
-    borderColor = 'border-yellow-400/50 border-dashed border-2';
+    textColor = 'text-amber-700 dark:text-amber-400';
   }
 
   return (
     <div
       id={matchesSearch ? `search-result-${node.id}` : undefined}
-      className={`ml-4 border-l border-slate-300 dark:border-slate-800 pl-2 relative bg-white dark:bg-transparent`}
+      className="ml-4 border-l border-slate-300 dark:border-slate-800 pl-2 relative"
     >
-      <div className={`flex items-center py-1 text-sm font-mono hover:bg-slate-100 dark:hover:bg-slate-800/50 rounded px-1 group transition-all duration-200 ${matchesSearch || hasMatchingChild ? 'opacity-100' : (searchTerm ? 'opacity-50' : 'opacity-100')} ${bgColor} ${borderColor} ${ringStyle} border`}>
+      <div className={`flex items-center py-1.5 text-sm font-mono hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-md px-2 group transition-all duration-200 ${matchesSearch || hasMatchingChild ? 'opacity-100' : (searchTerm ? 'opacity-40' : 'opacity-100')} ${bgColor} ${ringStyle}`}>
         {/* 展开/折叠 按钮 */}
         {node.children.length > 0 ? (
           <button
@@ -181,25 +176,20 @@ const TreeNode = ({
           )}
 
           {node.isConflict && (
-              <span className="flex items-center text-[10px] font-bold text-red-700 dark:text-red-400 ml-2 border border-red-500/30 bg-red-500/10 px-2 py-0.5 rounded shadow-sm uppercase tracking-tighter">
-                  <span className="relative flex h-2 w-2 mr-1.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-600"></span>
-                  </span>
-                  {t('maven.node.conflict')}: {node.conflictWinner}
+              <span className="inline-flex items-center text-[10px] font-semibold text-red-600 dark:text-red-400 ml-2 bg-red-50 dark:bg-red-950/40 px-2 py-0.5 rounded-full">
+                  ⚠ {t('maven.node.conflict.detail').replace('{winner}', node.conflictWinner || '')}
               </span>
           )}
           
           {node.isDuplicate && (
-              <span className="text-[10px] text-slate-400 dark:text-slate-500 ml-2 font-bold italic tracking-widest uppercase">
-                  ({t('maven.node.duplicate')})
+              <span className="inline-flex items-center text-[10px] font-semibold text-slate-400 dark:text-slate-500 ml-2 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+                  {t('maven.node.duplicate')}
               </span>
           )}
 
           {node.isManaged && (
-              <span className="flex items-center text-[10px] font-bold text-amber-700 dark:text-amber-400 ml-2 border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 rounded shadow-sm uppercase tracking-tighter">
-                  <Info className="w-3 h-3 mr-1" />
-                  {t('maven.node.managed')} ({node.managedVersion})
+              <span className="inline-flex items-center text-[10px] font-semibold text-amber-600 dark:text-amber-400 ml-2 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-full">
+                  ↑ {t('maven.node.managed.detail').replace('{version}', node.managedVersion || '')}
               </span>
           )}
         </div>
@@ -232,6 +222,7 @@ export default function MavenTree() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showOnlyConflicts, setShowOnlyConflicts] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
 
   // 搜索结果计数
   const searchMatchCount = useMemo(() => {
@@ -250,18 +241,28 @@ export default function MavenTree() {
     return count;
   }, [treeData, searchTerm]);
 
-  // 自动滚动到第一个搜索结果
+  // 搜索词变化时重置索引并跳到第一个
   React.useEffect(() => {
+    setCurrentMatchIndex(0);
     if (searchTerm && searchMatchCount > 0) {
       const timer = setTimeout(() => {
-        const firstMatch = document.querySelector('[id^="search-result-"]');
-        if (firstMatch) {
-          firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const matches = document.querySelectorAll('[id^="search-result-"]');
+        if (matches.length > 0) {
+          matches[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
       }, 300);
       return () => clearTimeout(timer);
     }
   }, [searchTerm, searchMatchCount]);
+
+  // 跳转到指定索引的匹配结果
+  const navigateToMatch = useCallback((index: number) => {
+    const matches = document.querySelectorAll('[id^="search-result-"]');
+    if (matches.length === 0) return;
+    const wrappedIndex = ((index % matches.length) + matches.length) % matches.length;
+    setCurrentMatchIndex(wrappedIndex);
+    matches[wrappedIndex]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, []);
 
   const stats = useMemo(() => {
     if (!treeData) return null;
@@ -892,15 +893,29 @@ export default function MavenTree() {
         <TabsTrigger value="weight" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-slate-950 dark:data-[state=active]:text-slate-50"><BarChart3 className="w-4 h-4 mr-2"/> {t('maven.tab.weight')}</TabsTrigger>
       </TabsList>
       
-      <div className="my-2 flex gap-4 text-xs font-bold text-slate-950 dark:text-slate-400 px-2 bg-slate-50 dark:bg-slate-900/30 py-2 rounded border border-slate-200 dark:border-slate-800">
-          <span className="flex items-center"><div className="w-3 h-3 rounded-sm bg-red-500 mr-2 shadow-sm"></div> {t('maven.stat.conflict')} (CONFLICT): {stats.conflictCount}</span>
-          <span className="flex items-center"><div className="w-3 h-3 rounded-sm bg-amber-500 mr-2 shadow-sm"></div> {t('maven.stat.managed')} (MANAGED): {stats.managedCount}</span>
-          <span className="flex items-center"><div className="w-3 h-3 rounded-sm bg-slate-400 mr-2 shadow-sm"></div> {t('maven.stat.duplicate')} (DUPLICATE): {stats.duplicateCount}</span>
+      <div className="my-2 flex flex-wrap gap-3 text-xs px-2 bg-slate-50 dark:bg-slate-900/30 py-2 rounded-lg border border-slate-200 dark:border-slate-800">
+          <span className="flex items-center gap-1.5 group relative cursor-help" title={t('maven.stat.conflict.tip')}>
+            <span className="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+            <span className="font-semibold text-red-600 dark:text-red-400">{t('maven.stat.conflict')}</span>
+            <span className="font-bold text-slate-950 dark:text-slate-50">{stats.conflictCount}</span>
+          </span>
+          <span className="text-slate-300 dark:text-slate-700">|</span>
+          <span className="flex items-center gap-1.5 cursor-help" title={t('maven.stat.managed.tip')}>
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+            <span className="font-semibold text-amber-600 dark:text-amber-400">{t('maven.stat.managed')}</span>
+            <span className="font-bold text-slate-950 dark:text-slate-50">{stats.managedCount}</span>
+          </span>
+          <span className="text-slate-300 dark:text-slate-700">|</span>
+          <span className="flex items-center gap-1.5 cursor-help" title={t('maven.stat.duplicate.tip')}>
+            <span className="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
+            <span className="font-semibold text-slate-500 dark:text-slate-400">{t('maven.stat.duplicate')}</span>
+            <span className="font-bold text-slate-950 dark:text-slate-50">{stats.duplicateCount}</span>
+          </span>
       </div>
           
           <TabsContent value="list">
             <Card className="bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-800 shadow-lg">
-              <CardHeader className="border-b bg-slate-50 dark:bg-slate-900/50">
+              <CardHeader className="border-b bg-slate-50 dark:bg-slate-900/50 sticky top-0 z-10">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                       <div className="flex items-center gap-4">
                         <CardTitle className="text-slate-950 dark:text-slate-50">{t('maven.list.detail')}</CardTitle>
@@ -919,24 +934,50 @@ export default function MavenTree() {
                         )}
                       </div>
                       <div className="flex items-center gap-2">
-                          {searchTerm && (
-                              <span className="text-xs font-bold bg-yellow-400 text-slate-950 px-3 py-1 rounded-full shadow-sm animate-in zoom-in-50">
-                                  {t('maven.list.matchResult').replace('{n}', searchMatchCount.toString())}
-                              </span>
-                          )}
                           <div className="relative w-full md:w-64">
                               <Search className="absolute left-2 top-2.5 h-4 w-4 text-slate-400" />
                               <Input
                                   placeholder={t('common.search')}
-                                  className="pl-8 bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-800 text-slate-950 dark:text-slate-50 focus:ring-slate-950"
+                                  className="pl-8 pr-8 bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-800 text-slate-950 dark:text-slate-50 focus:ring-slate-950"
                                   value={searchTerm}
                                   onChange={(e) => setSearchTerm(e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && searchMatchCount > 0) {
+                                      navigateToMatch(e.shiftKey ? currentMatchIndex - 1 : currentMatchIndex + 1);
+                                    }
+                                  }}
                               />
+                              {searchTerm && (
+                                <button onClick={() => setSearchTerm('')} className="absolute right-2 top-2.5 text-slate-400 hover:text-slate-600">
+                                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                                </button>
+                              )}
                           </div>
+                          {searchTerm && searchMatchCount > 0 && (
+                            <div className="flex items-center gap-1">
+                              <span className="text-xs font-medium text-slate-500 dark:text-slate-400 whitespace-nowrap tabular-nums">
+                                {currentMatchIndex + 1}/{searchMatchCount}
+                              </span>
+                              <button
+                                onClick={() => navigateToMatch(currentMatchIndex - 1)}
+                                className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                                title={t('maven.list.prev')}
+                              >
+                                <ChevronUp className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => navigateToMatch(currentMatchIndex + 1)}
+                                className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                                title={t('maven.list.next')}
+                              >
+                                <ChevronDown className="w-4 h-4" />
+                              </button>
+                            </div>
+                          )}
                       </div>
                   </div>
               </CardHeader>
-              <CardContent className="p-0 overflow-x-auto bg-white dark:bg-transparent">
+              <CardContent className="p-0 overflow-auto bg-white dark:bg-transparent max-h-[70vh]">
                   <div className="p-4 min-w-[600px]">
                       {treeData.map(root => (
                           <TreeNode

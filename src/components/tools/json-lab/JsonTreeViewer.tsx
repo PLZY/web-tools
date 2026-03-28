@@ -38,12 +38,9 @@ const JsonTreeViewer: React.FC<JsonTreeViewerProps> = ({
         src={json}
         theme={theme === "dark" ? "ocean" : "rjv-default"}
         onSelect={handleSelect}
-        // Collapsed to 3 levels by default as requested
-        collapsed={3}
-        // Filtering is not directly supported, but we can pass the filtered json
-        // The parent component should handle the filtering logic
-        // For now, we pass the full json
-        // TODO: Implement filtering logic in the parent component
+        collapsed={false}
+        displayDataTypes={false}
+        displayObjectSize={false}
         style={{
           width: "100%",
           height: "100%",

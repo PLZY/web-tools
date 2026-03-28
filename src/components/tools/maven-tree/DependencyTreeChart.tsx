@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useMemo, useState, useRef, useEffect } from 'react';
+import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import ReactECharts from 'echarts-for-react';
 import { useTheme } from 'next-themes';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { MavenNode } from './types';
 import { useTranslation } from '@/lib/i18n';
 
@@ -22,12 +22,10 @@ export function DependencyTreeChart({ data }: DependencyTreeChartProps) {
   const chartRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // ResizeObserver Implementation
   useEffect(() => {
     if (!containerRef.current || !chartRef.current) return;
     const resizeObserver = new ResizeObserver(() => {
-      const echartInstance = chartRef.current.getEchartsInstance();
-      echartInstance.resize();
+      chartRef.current?.getEchartsInstance()?.resize();
     });
     resizeObserver.observe(containerRef.current);
     return () => resizeObserver.disconnect();
@@ -43,6 +41,17 @@ export function DependencyTreeChart({ data }: DependencyTreeChartProps) {
     return map;
   }, [data]);
 
+  // 计算树的总节点数来动态调整高度
+  const totalNodes = useMemo(() => {
+    let count = 0;
+    const traverse = (node: MavenNode) => {
+      count++;
+      node.children.forEach(traverse);
+    };
+    data.forEach(traverse);
+    return count;
+  }, [data]);
+
   const chartData = useMemo(() => {
     const transformNode = (node: MavenNode): any => {
       const isHighlighted = highlightPath.includes(node.id);
@@ -51,54 +60,55 @@ export function DependencyTreeChart({ data }: DependencyTreeChartProps) {
         node.groupId?.toLowerCase().includes(localSearch.toLowerCase())
       );
 
-      let color = isDark ? '#cbd5e1' : '#020617';
-      let borderColor = isDark ? '#475569' : '#cbd5e1'; 
-      let bgColor = isDark ? '#0f172a' : '#f0f9ff';
+      let color = isDark ? '#cbd5e1' : '#334155';
+      let borderColor = isDark ? '#475569' : '#d1d5db';
+      let bgColor = isDark ? '#1e293b' : '#ffffff';
 
       if (isHighlighted || isSearchMatched) {
-        borderColor = '#eab308';
-        color = isDark ? '#fde047' : '#854d0e';
-        bgColor = isDark ? '#422006' : '#fef9c3';
+        borderColor = '#f59e0b';
+        color = isDark ? '#fde047' : '#92400e';
+        bgColor = isDark ? '#451a03' : '#fef3c7';
       } else if (node.isConflict) {
-        color = '#b91c1c';
+        color = isDark ? '#fca5a5' : '#b91c1c';
         borderColor = '#ef4444';
-        bgColor = isDark ? 'rgba(185, 28, 28, 0.2)' : 'rgba(185, 28, 28, 0.05)';
+        bgColor = isDark ? '#450a0a' : '#fef2f2';
       }
 
-      const labelText = node.artifactId?.length > 18 
-          ? node.artifactId.substring(0, 16) + '..' 
+      const labelText = node.artifactId?.length > 22
+          ? node.artifactId.substring(0, 20) + '..'
           : node.artifactId || "unknown";
 
       return {
         id: node.id,
-        name: `${labelText}\n${node.version || 'unknown'}`,
+        name: `${labelText}\n${node.version || ''}`,
         value: `${node.groupId}:${node.artifactId}:${node.version}`,
         children: node.children.map(transformNode),
         itemStyle: {
           color: bgColor,
-          borderColor: borderColor,
-          borderWidth: (isHighlighted || isSearchMatched || node.isConflict) ? 2 : 1,
-          borderRadius: 4,
+          borderColor,
+          borderWidth: (isHighlighted || isSearchMatched || node.isConflict) ? 2.5 : 1,
+          borderRadius: 6,
+          shadowBlur: (isHighlighted || isSearchMatched) ? 8 : 0,
+          shadowColor: (isHighlighted || isSearchMatched) ? 'rgba(245, 158, 11, 0.4)' : 'transparent',
         },
         label: {
-          color: color,
+          color,
           fontWeight: (isHighlighted || isSearchMatched) ? 'bold' : 'normal',
           fontSize: 11,
-          padding: [4, 4],
-          hideOverlap: true
+          lineHeight: 16,
+          padding: [6, 8],
+          hideOverlap: false,
         },
         symbol: 'roundRect',
-        symbolSize: [140, 48], // Slightly larger for better readability
-        // BUG FIX: Only force 'collapsed: false' if the node is part of a search/highlight.
-        // Otherwise, do NOT specify 'collapsed' to avoid overriding ECharts internal state on every re-render.
-        ...( (isHighlighted || isSearchMatched) ? { collapsed: false } : {} )
+        symbolSize: [160, 44],
+        ...((isHighlighted || isSearchMatched) ? { collapsed: false } : {})
       };
     };
 
     return data.map(transformNode);
   }, [data, isDark, localSearch, highlightPath]);
 
-  const onChartClick = (params: any) => {
+  const onChartClick = useCallback((params: any) => {
     if (params.data && params.data.id) {
       const path: string[] = [];
       let currentId = params.data.id;
@@ -108,86 +118,92 @@ export function DependencyTreeChart({ data }: DependencyTreeChartProps) {
       }
       setHighlightPath(path);
     }
-  };
+  }, [parentMap]);
 
-  const option = {
+  const dynamicHeight = Math.max(650, Math.min(totalNodes * 12, 2000));
+
+  const option = useMemo(() => ({
     backgroundColor: 'transparent',
     tooltip: {
       trigger: 'item',
-      formatter: (params: any) => (params.value || "").replace(/:/g, '<br/>')
+      backgroundColor: isDark ? '#1e293b' : '#ffffff',
+      borderColor: isDark ? '#475569' : '#e2e8f0',
+      textStyle: { color: isDark ? '#e2e8f0' : '#334155', fontSize: 12 },
+      formatter: (params: any) => {
+        const parts = (params.value || "").split(':');
+        if (parts.length >= 3) {
+          return `<div style="font-weight:600">${parts[1]}</div><div style="color:#64748b;font-size:11px">${parts[0]}</div><div style="margin-top:4px;color:#3b82f6">${parts[2]}</div>`;
+        }
+        return params.value;
+      }
     },
     series: [
       {
         type: 'tree',
         data: chartData,
-        top: '5%',
-        left: '12%',
-        bottom: '5%',
-        right: '12%',
+        top: '40',
+        left: '60',
+        bottom: '40',
+        right: '60',
         layout: 'orthogonal',
-        // INCREASE GAPS TO PREVENT OVERLAP
-        nodeGap: 60, // Increase vertical gap to avoid label/box collision
-        levelGap: 240, // Increase horizontal gap for better polyline clarity
         orient: 'LR',
         roam: true,
-        edgeShape: 'polyline', // Use polyline for cleaner industrial look
-        edgeForkPosition: '20%',
+        zoom: 0.9,
+        edgeShape: 'polyline',
+        edgeForkPosition: '30%',
         symbolKeepAspect: true,
         lineStyle: {
-          color: isDark ? '#334155' : '#cbd5e1',
+          color: isDark ? '#334155' : '#d1d5db',
           width: 1.5,
           curveness: 0
         },
         emphasis: {
-          lineStyle: {
-            width: 3,
-            color: '#eab308'
-          }
+          focus: 'ancestor',
+          lineStyle: { width: 3, color: '#f59e0b' }
         },
-        // INITIAL DEPTH ONLY
-        initialTreeDepth: 1,
+        initialTreeDepth: 2,
         expandAndCollapse: true,
         animationDuration: 300,
         animationDurationUpdate: 300
       }
     ]
-  };
+  }), [chartData, isDark]);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-3">
         <div className="relative w-64">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder={t('maven.graph.search')}
-            className="pl-8 h-9 bg-white dark:bg-slate-900 text-slate-950 dark:text-slate-50 border-slate-300 dark:border-slate-800"
+            className="pl-8 h-9 bg-white dark:bg-slate-900 text-sm"
             value={localSearch}
             onChange={(e) => setLocalSearch(e.target.value)}
           />
+          {localSearch && (
+            <button onClick={() => setLocalSearch('')} className="absolute right-2 top-2.5 text-muted-foreground hover:text-foreground">
+              <X className="h-4 w-4" />
+            </button>
+          )}
         </div>
-        <div className="flex gap-2">
-            {highlightPath.length > 0 && (
-                <Button variant="outline" size="sm" onClick={() => setHighlightPath([])} className="h-8 text-xs font-bold border-slate-300">
-                    {t('maven.graph.clearPath')}
-                </Button>
-            )}
-            <Button variant="secondary" size="sm" onClick={() => setLocalSearch('')} className="h-8 text-xs font-bold" disabled={!localSearch}>
-                {t('common.clearSearch')}
-            </Button>
-        </div>
+        {highlightPath.length > 0 && (
+          <Button variant="outline" size="sm" onClick={() => setHighlightPath([])} className="h-8 text-xs font-medium">
+            {t('maven.graph.clearPath')}
+          </Button>
+        )}
       </div>
-      <div 
+      <div
         ref={containerRef}
-        className="w-full min-h-[650px] border rounded-xl bg-slate-50 dark:bg-slate-900/40 relative overflow-hidden shadow-inner"
+        className="w-full border rounded-xl bg-white dark:bg-slate-950 relative overflow-hidden"
       >
-        <ReactECharts 
+        <ReactECharts
           ref={chartRef}
-          option={option} 
-          style={{ height: '650px', width: '100%' }}
+          option={option}
+          style={{ height: `${dynamicHeight}px`, width: '100%' }}
           onEvents={{ 'click': onChartClick }}
           theme={isDark ? 'dark' : undefined}
         />
-        <div className="absolute bottom-4 right-4 text-[10px] text-slate-500 dark:text-slate-400 font-medium pointer-events-none bg-white/80 dark:bg-black/40 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="absolute bottom-3 right-3 text-[10px] text-muted-foreground pointer-events-none bg-background/80 backdrop-blur-sm px-3 py-1 rounded-full border">
           {t('maven.graph.tips')}
         </div>
       </div>

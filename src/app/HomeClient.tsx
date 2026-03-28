@@ -1,15 +1,21 @@
 "use client";
 
+import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   Search,
   FileText,
   Clock,
   Database,
-  Cpu
+  Cpu,
+  Terminal,
+  GitCompare,
+  Unplug,
+  FlaskConical,
+  Zap,
 } from "lucide-react";
-import { ToolCard } from "@/components/layout/ToolCard";
 import { useTranslation } from "@/lib/i18n";
+import { ReactNode } from "react";
 
 const JumpingDog = ({ className }: { className?: string }) => (
   <svg
@@ -96,90 +102,218 @@ const JumpingDog = ({ className }: { className?: string }) => (
   </svg>
 );
 
+// Gradient color palette per tool
+const TOOL_GRADIENTS = [
+  { bg: "from-cyan-500 to-blue-500",     icon: "text-cyan-500" },
+  { bg: "from-purple-500 to-pink-500",   icon: "text-purple-500" },
+  { bg: "from-emerald-500 to-teal-500",  icon: "text-emerald-500" },
+  { bg: "from-orange-500 to-red-500",    icon: "text-orange-500" },
+  { bg: "from-indigo-500 to-purple-500", icon: "text-indigo-500" },
+  { bg: "from-blue-500 to-cyan-500",     icon: "text-blue-500" },
+  { bg: "from-yellow-500 to-orange-500", icon: "text-yellow-500" },
+  { bg: "from-pink-500 to-rose-500",     icon: "text-pink-500" },
+  { bg: "from-violet-500 to-purple-500", icon: "text-violet-500" },
+];
+
+interface MiniCardProps {
+  title: string;
+  description: string;
+  href: string;
+  icon: ReactNode;
+  index: number;
+}
+
+function MiniCard({ title, description, href, icon, index }: MiniCardProps) {
+  const { bg: gradient, icon: iconColor } = TOOL_GRADIENTS[index % TOOL_GRADIENTS.length];
+
+  return (
+    <motion.div
+      whileHover={{ y: -2 }}
+      transition={{ type: "spring", stiffness: 400, damping: 25 }}
+      className="group relative h-full"
+    >
+      {/* Glow border */}
+      <div className={`absolute -inset-px bg-gradient-to-r ${gradient} rounded-xl opacity-0 group-hover:opacity-100 blur-sm transition-all duration-500`} />
+
+      {/* Shimmer overlay */}
+      <div className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none">
+        <div
+          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700"
+          style={{
+            background: "linear-gradient(110deg, transparent 40%, rgba(255,255,255,0.08) 50%, transparent 60%)",
+            backgroundSize: "200% 100%",
+            animation: "home-shimmer 2s infinite",
+          }}
+        />
+      </div>
+
+      <Link
+        href={href}
+        className="relative flex flex-col h-full p-5 rounded-xl border border-border bg-card/90 backdrop-blur-xl overflow-hidden transition-colors duration-300 group-hover:border-border/80"
+      >
+        {/* Corner accent */}
+        <div className={`absolute top-0 right-0 w-20 h-20 bg-gradient-to-br ${gradient} opacity-5 rounded-bl-full`} />
+
+        {/* Scan line */}
+        <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none">
+          <div
+            className="absolute w-full h-px bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-0 group-hover:opacity-20 transition-opacity duration-300"
+            style={{ animation: "home-scan 3s linear infinite" }}
+          />
+        </div>
+
+        {/* Header row */}
+        <div className="flex items-start justify-between mb-3 relative z-10">
+          <div className="relative">
+            <div className={`absolute inset-0 bg-gradient-to-r ${gradient} rounded-lg opacity-20 blur-md group-hover:opacity-40 transition-opacity duration-300`} />
+            <div className="relative p-2.5 rounded-lg bg-muted group-hover:scale-110 transition-transform duration-300">
+              <div className={iconColor}>
+                {icon}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="space-y-1.5 relative z-10 flex-1">
+          <h3 className="font-bold text-sm tracking-tight text-foreground leading-tight font-mono">
+            {title}
+          </h3>
+          <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">
+            {description}
+          </p>
+        </div>
+
+        {/* Bottom bar */}
+        <div className="mt-4 pt-3 border-t border-border/40 flex items-center justify-between relative z-10">
+          <span className="text-xs font-mono text-muted-foreground/50">
+            {`#${(index + 1).toString().padStart(2, "0")}`}
+          </span>
+          <div className="flex items-center gap-2 text-xs font-mono text-cyan-500 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0">
+            <span>启动</span>
+            <div className="flex gap-0.5">
+              <div className="w-1 h-1 rounded-full bg-cyan-400 animate-pulse" />
+              <div className="w-1 h-1 rounded-full bg-cyan-400 animate-pulse" style={{ animationDelay: "0.2s" }} />
+              <div className="w-1 h-1 rounded-full bg-cyan-400 animate-pulse" style={{ animationDelay: "0.4s" }} />
+            </div>
+          </div>
+        </div>
+      </Link>
+    </motion.div>
+  );
+}
+
 export default function HomeClient() {
   const { t } = useTranslation();
 
+  const tools = [
+    { href: "/json-lab",     title: t("home.jsonLab.title"),     desc: t("home.jsonLab.desc"),     icon: <Database className="w-4 h-4" /> },
+    { href: "/diff",         title: t("home.diff.title"),        desc: t("home.diff.desc"),        icon: <GitCompare className="w-4 h-4" /> },
+    { href: "/sql-stitcher", title: t("home.sqlStitcher.title"), desc: t("home.sqlStitcher.desc"), icon: <Unplug className="w-4 h-4" /> },
+    { href: "/mojibake",     title: t("home.mojibake.title"),    desc: t("home.mojibake.desc"),    icon: <FlaskConical className="w-4 h-4" /> },
+    { href: "/cron",         title: t("home.cron.title"),        desc: t("home.cron.desc"),        icon: <Clock className="w-4 h-4" /> },
+    { href: "/curl-builder", title: t("home.curl.title"),        desc: t("home.curl.desc"),        icon: <Terminal className="w-4 h-4" /> },
+    { href: "/log-config",   title: t("home.logback.title"),     desc: t("home.logback.desc"),     icon: <FileText className="w-4 h-4" /> },
+    { href: "/maven-tree",   title: t("home.maven.title"),       desc: t("home.maven.desc"),       icon: <Search className="w-4 h-4" /> },
+    { href: "/jvm-tuning",   title: t("home.jvm.title"),         desc: t("home.jvm.desc"),         icon: <Cpu className="w-4 h-4" /> },
+  ];
+
   return (
-    <div className="flex flex-col items-center w-full">
-      {/* 1. 品牌 Hero 区 */}
-      <section className="relative w-full py-20 flex flex-col items-center justify-center border-b border-border/40 bg-background overflow-hidden">
-        <motion.div 
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="relative z-10 text-center px-4 max-w-4xl"
-        >
-          <div className="flex items-center justify-center gap-4 mb-8">
-            <motion.div
-              animate={{
-                y: [0, -18, 0],
-                scaleX: [1.03, 0.98, 1.03],
-                scaleY: [0.98, 1.03, 0.98],
-                rotate: [0, -2, 2, 0]
-              }}
-              transition={{
-                duration: 1.5,
-                repeat: Infinity,
-                times: [0, 0.5, 1],
-                ease: "circOut"
-              }}
-            >
-              <JumpingDog className="w-14 h-14 md:w-16 md:h-16" />
-            </motion.div>
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-foreground">
-              {t('home.title')}
-            </h1>
-          </div>
-          
-          <p className="text-xl md:text-2xl text-muted-foreground font-medium max-w-2xl mx-auto leading-relaxed">
-            {t('home.subtitle')}
-          </p>
-        </motion.div>
-      </section>
+    <div className="relative flex flex-col" style={{ height: "calc(100dvh - 56px - 64px)" }}>
+      {/* Animated grid background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div
+          className="absolute inset-0 opacity-[0.04] dark:opacity-[0.08]"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(148,163,184,0.8) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.8) 1px, transparent 1px)",
+            backgroundSize: "50px 50px",
+            animation: "home-grid 20s linear infinite",
+          }}
+        />
+        {/* Gradient orbs */}
+        <div
+          className="absolute top-0 left-1/4 w-80 h-80 rounded-full blur-3xl animate-pulse bg-blue-500/10 dark:bg-blue-500/20"
+          style={{ animationDuration: "4s" }}
+        />
+        <div
+          className="absolute bottom-0 right-1/4 w-80 h-80 rounded-full blur-3xl animate-pulse bg-purple-500/10 dark:bg-purple-500/20"
+          style={{ animationDuration: "6s" }}
+        />
+      </div>
 
-      {/* 2. Bento Grid 布局的工具矩阵 (2+3 结构) */}
-      <section className="w-full max-w-7xl px-6 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
-          {/* 第一行：双核心 (各占 3 列) - JSON Lab 在前，Cron 在后 */}
-          <ToolCard 
-            className="md:col-span-3 border-slate-200 dark:border-slate-800"
-            title={t('home.jsonLab.title')} 
-            description={t('home.jsonLab.desc')}
-            href="/json-lab"
-            icon={<Database className="w-8 h-8"/>}
-          />
-          <ToolCard 
-            className="md:col-span-3 border-slate-200 dark:border-slate-800"
-            title={t('home.cron.title')} 
-            description={t('home.cron.desc')}
-            href="/cron"
-            icon={<Clock className="w-8 h-8"/>} 
-          />
-
-          {/* 第二行：三个工具 */}
-          <ToolCard
-            className="md:col-span-2 border-slate-200 dark:border-slate-800"
-            title={t('home.logback.title')}
-            description={t('home.logback.desc')}
-            href="/log-config"
-            icon={<FileText className="w-6 h-6"/>}
-          />
-          <ToolCard
-            className="md:col-span-2 border-slate-200 dark:border-slate-800"
-            title={t('home.maven.title')}
-            description={t('home.maven.desc')}
-            href="/maven-tree"
-            icon={<Search className="w-6 h-6"/>}
-          />
-          <ToolCard
-            className="md:col-span-2 border-slate-200 dark:border-slate-800"
-            title={t('home.jvm.title')}
-            description={t('home.jvm.desc')}
-            href="/jvm-tuning"
-            icon={<Cpu className="w-6 h-6"/>}
-          />
+      {/* Hero */}
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35 }}
+        className="relative z-10 shrink-0 px-6 pt-6 pb-4 text-center"
+      >
+        {/* Badge */}
+        <div className="inline-flex items-center gap-2 mb-3 px-4 py-1.5 rounded-full bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/20">
+          <Zap className="w-3.5 h-3.5 text-cyan-500" />
+          <span className="text-xs font-mono text-cyan-600 dark:text-cyan-400">简洁 · 高效 · 实用</span>
         </div>
-      </section>
+
+        {/* Title row with dog */}
+        <div className="flex items-center justify-center gap-3 mb-2">
+          <motion.div
+            animate={{ y: [0, -6, 0], rotate: [0, -3, 3, 0] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            className="text-primary shrink-0"
+          >
+            <JumpingDog className="w-9 h-9" />
+          </motion.div>
+          <h1 className="text-2xl font-extrabold tracking-tight text-foreground leading-tight">
+            {t("home.title")}
+          </h1>
+        </div>
+        <p className="text-sm text-muted-foreground font-mono">
+          {t("home.subtitle")}
+        </p>
+      </motion.div>
+
+      {/* Tool grid */}
+      <div className="relative z-10 flex-1 flex items-center px-5 pb-2">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 w-full max-w-5xl mx-auto"
+        >
+          {tools.map((tool, i) => (
+            <motion.div
+              key={tool.href}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: i * 0.05 }}
+            >
+              <MiniCard
+                href={tool.href}
+                title={tool.title}
+                description={tool.desc}
+                icon={tool.icon}
+                index={i}
+              />
+            </motion.div>
+          ))}
+        </motion.div>
+      </div>
+
+      <style>{`
+        @keyframes home-grid {
+          0%   { transform: translate(0, 0); }
+          100% { transform: translate(50px, 50px); }
+        }
+        @keyframes home-shimmer {
+          0%   { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+        @keyframes home-scan {
+          0%   { top: 0%; }
+          100% { top: 100%; }
+        }
+      `}</style>
     </div>
   );
 }

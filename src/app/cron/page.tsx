@@ -1,10 +1,19 @@
 "use client";
 
 import CronTranslator from "@/components/tools/CronTranslator";
+import { ToolFAQ } from "@/components/tools/ToolFAQ";
 import { useTranslation } from "@/lib/i18n";
+import Link from "next/link";
 
 export default function CronPage() {
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
+
+  const faqs = [
+    { q: t('faq.cron.q1'), a: t('faq.cron.a1') },
+    { q: t('faq.cron.q2'), a: t('faq.cron.a2') },
+    { q: t('faq.cron.q3'), a: t('faq.cron.a3') },
+    { q: t('faq.cron.q4'), a: t('faq.cron.a4') },
+  ];
 
   return (
     <div className="container mx-auto py-8 space-y-8">
@@ -19,39 +28,13 @@ export default function CronPage() {
 
       <CronTranslator />
 
-      <article className="mt-12 space-y-8">
-        <h2 className="text-2xl font-black text-slate-950 dark:text-slate-50 flex items-center gap-2">
-          <div className="w-2 h-8 bg-red-500 rounded-full"></div>
-          {t('cron.article.title')}
-        </h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
-            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">{t('cron.article.h1')}</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-              {t('cron.article.p2')}
-            </p>
-          </div>
+      <ToolFAQ faqs={faqs} />
 
-          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
-            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">{t('cron.article.h2')}</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-              {t('cron.article.p3')}
-            </p>
-          </div>
-
-          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
-            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">{t('cron.article.h3')}</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-              {t('cron.article.p4')}
-            </p>
-          </div>
-        </div>
-
-        <p className="text-center text-sm text-slate-400 italic pt-4">
-          {t('cron.article.footer')}
-        </p>
-      </article>
+      <div className="flex justify-center pb-4">
+        <Link href="/guides/understanding-cron-expressions" className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-colors">
+          {lang === 'zh' ? '阅读彻底搞懂 Cron 表达式指南 →' : 'Read Understanding Cron Expressions Guide →'}
+        </Link>
+      </div>
     </div>
   );
 }

@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Github, Menu, Package, FileText, Clock, Database, Cpu, Globe } from "lucide-react";
+import { Github, Menu, Package, FileText, Clock, Database, Cpu, Globe, Terminal, GitCompare, Unplug, FlaskConical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -108,12 +109,23 @@ const JumpingDog = ({ className }: { className?: string }) => (
 export function Navbar() {
   const { lang, setLang, t } = useTranslation();
 
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const navItems = [
     { href: "/json-lab", label: t('nav.jsonLab'), icon: Database },
+    { href: "/diff", label: t('nav.diff'), icon: GitCompare },
+    { href: "/sql-stitcher", label: t('nav.sqlStitcher'), icon: Unplug },
+    { href: "/mojibake", label: t('nav.mojibake'), icon: FlaskConical },
+    { href: "/curl-builder", label: t('nav.curl'), icon: Terminal },
     { href: "/cron", label: t('nav.cron'), icon: Clock },
     { href: "/log-config", label: t('nav.logback'), icon: FileText },
     { href: "/maven-tree", label: t('nav.maven'), icon: Package },
     { href: "/jvm-tuning", label: t('nav.jvm'), icon: Cpu },
+    { href: "/guides", label: mounted ? (lang === 'zh' ? '技术专栏' : 'Guides') : 'Guides', icon: FileText },
   ];
 
   return (

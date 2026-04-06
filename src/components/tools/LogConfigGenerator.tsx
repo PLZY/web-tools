@@ -584,9 +584,11 @@ function generateLogback(config: LogConfigState, t: (k: string) => string): stri
             <fileNamePattern>\${LOG_PATH}/error.%d{yyyy-MM-dd}.%i.log${gzip}</fileNamePattern>
             <maxFileSize>\${MAX_FILE_SIZE}</maxFileSize>
             <maxHistory>\${MAX_HISTORY}</maxHistory>
+            <totalSizeCap>\${TOTAL_SIZE_CAP}</totalSizeCap>
         </rollingPolicy>
         <encoder>
             <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %5p ${traceId}--- [%t] %-40.40logger{39} : %m%n</pattern>
+            <charset>UTF-8</charset>
         </encoder>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>ERROR</level>
@@ -615,8 +617,7 @@ function generateLogback(config: LogConfigState, t: (k: string) => string): stri
                             "timestamp": "@timestamp",
                             "severity": "%level",
                             "service": "${config.appName}",
-                            "trace": "%X{traceId:-}",
-                            "span": "%X{spanId:-}",
+                            ${config.useTraceId ? '"trace": "%X{traceId:-}",\n                            "span": "%X{spanId:-}",' : ''}
                             "pid": "\${PID:- }",
                             "thread": "%thread",
                             "class": "%logger{40}",
@@ -692,6 +693,7 @@ function generateLogback(config: LogConfigState, t: (k: string) => string): stri
     <logger name="${config.packageName}" level="${config.packageLevel}" additivity="false">
         <appender-ref ref="CONSOLE" />
         <appender-ref ref="${config.useAsync ? 'ASYNC_FILE' : 'FILE'}" />
+        ${config.separateError ? '<appender-ref ref="ERROR_FILE" />' : ''}
     </logger>
 
     ${profiles}
@@ -703,10 +705,8 @@ function generateLog4j2(config: LogConfigState, t: (k: string) => string): strin
     const traceId = config.useTraceId ? '%X{traceId:-} ' : '';
     const gzip = config.useGzip ? '.gz' : '';
     
-    // Log4j2 推荐使用全局异步或 AsyncLogger，而非 AsyncAppender
-    const asyncConfig = config.useAsync
-        ? `<!-- ${t('logback.xml.comment.log4j2.async')} -->`
-        : '';
+    const loggerTag = config.useAsync ? 'AsyncLogger' : 'Logger';
+    const rootTag = config.useAsync ? 'AsyncRoot' : 'Root';
 
     const consolePattern = config.useColor
         ? `%style{%d{yyyy-MM-dd HH:mm:ss.SSS}}{dim} %highlight{%5p} %style{${traceId}}{magenta} %style{\${sys:PID}}{magenta} %style{---}{dim} %style{[%15.15t]}{dim} %style{%-40.40c{1.}}{cyan} %style{:}{dim} %m%n%xwEx`
@@ -728,8 +728,14 @@ function generateLog4j2(config: LogConfigState, t: (k: string) => string): strin
             <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} %5p ${traceId}--- [%t] %-40.40c{1.} : %m%n" charset="UTF-8"/>
             <Policies>
                 <TimeBasedTriggeringPolicy />
-                <SizeBasedTriggeringPolicy size="100MB" />
+                <SizeBasedTriggeringPolicy size="${config.maxFileSize}" />
             </Policies>
+            <DefaultRolloverStrategy max="${config.maxHistory}">
+                <Delete basePath="\${LOG_PATH}" maxDepth="1">
+                    <IfFileName glob="error-*.log${gzip}" />
+                    <IfLastModified age="${config.maxHistory}d" />
+                </Delete>
+            </DefaultRolloverStrategy>
         </RollingFile>` : '';
 
     const appenderRefs = ['<AppenderRef ref="Console"/>', '<AppenderRef ref="RollingFile"/>'];
@@ -740,7 +746,6 @@ function generateLog4j2(config: LogConfigState, t: (k: string) => string): strin
 
     return `<?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="WARN" monitorInterval="60" shutdownHook="${config.useShutdownHook ? 'enable' : 'disable'}">
-    ${asyncConfig}
     <Properties>
         <Property name="APP_NAME">${config.appName}</Property>
         <Property name="LOG_PATH">${config.basePath}</Property>
@@ -761,7 +766,7 @@ function generateLog4j2(config: LogConfigState, t: (k: string) => string): strin
             </Policies>
             <DefaultRolloverStrategy max="${config.maxHistory}">
                 <Delete basePath="\${LOG_PATH}" maxDepth="2">
-                    <IfFileName glob="*/\${APP_NAME}-*.log.gz" />
+                    <IfFileName glob="*/\${APP_NAME}-*.log${gzip}" />
                     <IfLastModified age="${config.maxHistory}d" />
                 </Delete>
             </DefaultRolloverStrategy>
@@ -771,13 +776,13 @@ function generateLog4j2(config: LogConfigState, t: (k: string) => string): strin
     </Appenders>
 
     <Loggers>
-        <Logger name="${config.packageName}" level="${config.packageLevel}" additivity="false">
+        <${loggerTag} name="${config.packageName}" level="${config.packageLevel}" additivity="false">
             ${appenderRefs.join('\n            ')}
-        </Logger>
+        </${loggerTag}>
 
-        <Root level="${config.rootLevel}">
+        <${rootTag} level="${config.rootLevel}">
             ${appenderRefs.join('\n            ')}
-        </Root>
+        </${rootTag}>
     </Loggers>
 
 </Configuration>`;

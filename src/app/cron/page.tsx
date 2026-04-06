@@ -3,10 +3,10 @@
 import CronTranslator from "@/components/tools/CronTranslator";
 import { ToolFAQ } from "@/components/tools/ToolFAQ";
 import { useTranslation } from "@/lib/i18n";
-import Link from "next/link";
+import { Clock } from "lucide-react";
 
 export default function CronPage() {
-  const { t, lang } = useTranslation();
+  const { t } = useTranslation();
 
   const faqs = [
     { q: t('faq.cron.q1'), a: t('faq.cron.a1') },
@@ -30,11 +30,15 @@ export default function CronPage() {
 
       <ToolFAQ faqs={faqs} />
 
-      <div className="flex justify-center pb-4">
-        <Link href="/guides/understanding-cron-expressions" className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-colors">
-          {lang === 'zh' ? '阅读彻底搞懂 Cron 表达式指南 →' : 'Read Understanding Cron Expressions Guide →'}
-        </Link>
-      </div>
+      <section className="bg-muted/50 dark:bg-muted/20 rounded-2xl py-8 px-6">
+        <div className="bg-card rounded-2xl p-7 sm:p-8 border border-border">
+          <h2 className="text-xl font-bold mb-4 flex items-center">
+            <Clock className="w-5 h-5 mr-3 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+            {t('seo.cron.what')}
+          </h2>
+          <p className="text-muted-foreground leading-relaxed">{t('seo.cron.what.body')}</p>
+        </div>
+      </section>
     </div>
   );
 }

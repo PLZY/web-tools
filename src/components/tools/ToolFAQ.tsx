@@ -1,11 +1,5 @@
 "use client";
 
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { HelpCircle } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
 
@@ -24,23 +18,19 @@ export function ToolFAQ({ faqs }: ToolFAQProps) {
   if (faqs.length === 0) return null;
 
   return (
-    <div className="border border-border bg-card rounded-xl p-6">
-      <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-        <HelpCircle className="w-5 h-5 text-muted-foreground" />
-        {t('faq.title')}
-      </h3>
-      <Accordion type="single" collapsible className="w-full">
+    <section className="bg-muted/50 dark:bg-muted/20 rounded-2xl py-8 px-6">
+      <h2 className="text-xl font-bold mb-6">{t('faq.title')}</h2>
+      <div className="space-y-4">
         {faqs.map((faq, index) => (
-          <AccordionItem key={index} value={`faq-${index}`}>
-            <AccordionTrigger className="text-left font-semibold text-sm hover:no-underline">
+          <div key={index} className="bg-card rounded-2xl p-7 sm:p-8 border border-border">
+            <h3 className="text-base font-bold mb-3 flex items-center">
+              <HelpCircle className="w-5 h-5 mr-3 text-blue-600 dark:text-blue-400 flex-shrink-0" />
               {faq.q}
-            </AccordionTrigger>
-            <AccordionContent className="text-muted-foreground leading-relaxed">
-              {faq.a}
-            </AccordionContent>
-          </AccordionItem>
+            </h3>
+            <p className="text-muted-foreground leading-relaxed">{faq.a}</p>
+          </div>
         ))}
-      </Accordion>
-    </div>
+      </div>
+    </section>
   );
 }

@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Github, Menu, Package, FileText, Clock, Database, Cpu, Globe, Terminal, GitCompare, Unplug, FlaskConical } from "lucide-react";
+import { Github, Menu, Globe, Terminal, ChevronDown,
+  Database, GitCompare, Unplug, FlaskConical, Search,
+  Terminal as TerminalIcon, FileText, Clock, Cpu,
+  Calculator, Brain, Monitor, Keyboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -108,24 +111,31 @@ const JumpingDog = ({ className }: { className?: string }) => (
 
 export function Navbar() {
   const { lang, setLang, t } = useTranslation();
-
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const navItems = [
-    { href: "/json-lab", label: t('nav.jsonLab'), icon: Database },
-    { href: "/diff", label: t('nav.diff'), icon: GitCompare },
-    { href: "/sql-stitcher", label: t('nav.sqlStitcher'), icon: Unplug },
-    { href: "/mojibake", label: t('nav.mojibake'), icon: FlaskConical },
-    { href: "/curl-builder", label: t('nav.curl'), icon: Terminal },
-    { href: "/cron", label: t('nav.cron'), icon: Clock },
-    { href: "/log-config", label: t('nav.logback'), icon: FileText },
-    { href: "/maven-tree", label: t('nav.maven'), icon: Package },
-    { href: "/jvm-tuning", label: t('nav.jvm'), icon: Cpu },
-    { href: "/guides", label: mounted ? (lang === 'zh' ? '技术专栏' : 'Guides') : 'Guides', icon: FileText },
+  const zh = !mounted || lang === "zh";
+
+  const devTools = [
+    { href: "/json-lab",     label: t("home.jsonLab.title"),     icon: <Database className="w-3.5 h-3.5" /> },
+    { href: "/diff",         label: t("home.diff.title"),         icon: <GitCompare className="w-3.5 h-3.5" /> },
+    { href: "/sql-stitcher", label: t("home.sqlStitcher.title"), icon: <Unplug className="w-3.5 h-3.5" /> },
+    { href: "/mojibake",     label: t("home.mojibake.title"),    icon: <FlaskConical className="w-3.5 h-3.5" /> },
+    { href: "/maven-tree",   label: t("home.maven.title"),       icon: <Search className="w-3.5 h-3.5" /> },
+    { href: "/curl-builder", label: t("home.curl.title"),        icon: <TerminalIcon className="w-3.5 h-3.5" /> },
+    { href: "/ide-shortcuts", label: t("home.ideShortcuts.title"), icon: <Keyboard className="w-3.5 h-3.5" /> },
+    { href: "/log-config",   label: t("home.logback.title"),     icon: <FileText className="w-3.5 h-3.5" /> },
+    { href: "/cron",         label: t("home.cron.title"),        icon: <Clock className="w-3.5 h-3.5" /> },
+    { href: "/jvm-tuning",   label: t("home.jvm.title"),         icon: <Cpu className="w-3.5 h-3.5" /> },
+  ];
+
+  const lifeTools = [
+    { href: "/hourly-wage", label: t("home.hourlyWage.title"), icon: <Calculator className="w-3.5 h-3.5" /> },
+    { href: "/mbti",        label: t("home.mbti.title"),       icon: <Brain className="w-3.5 h-3.5" /> },
+    { href: "/fake-update", label: t("home.fakeUpdate.title"), icon: <Monitor className="w-3.5 h-3.5" /> },
   ];
 
   return (
@@ -143,18 +153,59 @@ export function Navbar() {
               DogUp
             </span>
           </Link>
-          <nav className="hidden md:flex items-center gap-6 text-sm font-bold text-muted-foreground">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="transition-colors hover:text-foreground"
-              >
-                {item.label}
-              </Link>
-            ))}
+
+          {/* Desktop nav */}
+          <nav className="hidden md:flex items-center gap-1 text-sm font-bold text-muted-foreground">
+            <Link href="/" className="px-3 py-1.5 rounded-lg transition-colors hover:text-foreground hover:bg-muted/60">
+              {t("nav.home")}
+            </Link>
+
+            {/* Dev Tools dropdown */}
+            <div className="relative group">
+              <button className="flex items-center gap-1 px-3 py-1.5 rounded-lg transition-colors hover:text-foreground hover:bg-muted/60">
+                {zh ? "开发工具" : "Dev Tools"}
+                <ChevronDown className="w-3.5 h-3.5 transition-transform duration-200 group-hover:rotate-180" />
+              </button>
+              <div className="absolute top-full left-0 pt-1.5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50">
+                <div className="w-52 bg-background/95 backdrop-blur-xl border border-border rounded-xl shadow-xl py-1.5 overflow-hidden">
+                  {devTools.map(tool => (
+                    <Link
+                      key={tool.href}
+                      href={tool.href}
+                      className="flex items-center gap-2.5 px-3.5 py-2 text-sm font-normal text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+                    >
+                      <span className="text-muted-foreground/60">{tool.icon}</span>
+                      {tool.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Life Tools dropdown */}
+            <div className="relative group">
+              <button className="flex items-center gap-1 px-3 py-1.5 rounded-lg transition-colors hover:text-foreground hover:bg-muted/60">
+                {zh ? "生活工具" : "Life Tools"}
+                <ChevronDown className="w-3.5 h-3.5 transition-transform duration-200 group-hover:rotate-180" />
+              </button>
+              <div className="absolute top-full left-0 pt-1.5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50">
+                <div className="w-52 bg-background/95 backdrop-blur-xl border border-border rounded-xl shadow-xl py-1.5 overflow-hidden">
+                  {lifeTools.map(tool => (
+                    <Link
+                      key={tool.href}
+                      href={tool.href}
+                      className="flex items-center gap-2.5 px-3.5 py-2 text-sm font-normal text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+                    >
+                      <span className="text-muted-foreground/60">{tool.icon}</span>
+                      {tool.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
           </nav>
         </div>
+
         <div className="flex items-center gap-2 md:gap-4">
           <Link
             href="https://github.com/PLZY/web-tools"
@@ -184,7 +235,7 @@ export function Navbar() {
           </DropdownMenu>
 
           <ModeToggle />
-          
+
           {/* Mobile Menu */}
           <Sheet>
             <SheetTrigger asChild>
@@ -196,24 +247,48 @@ export function Navbar() {
                 <span className="sr-only">Toggle Menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="pr-0 bg-background border-border">
-                <SheetHeader>
-                    <SheetTitle className="text-left font-extrabold text-lg tracking-tight bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent flex items-center gap-2">
-                      <JumpingDog className="w-6 h-6" />
-                      DogUp DevTools
-                    </SheetTitle>
-                </SheetHeader>
-              <div className="grid gap-4 py-4">
-                  {navItems.map((item) => (
-                    <Link
-                        key={item.href}
-                        href={item.href}
-                        className="flex items-center gap-2 text-lg font-bold text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                        <item.icon className="h-5 w-5" />
-                        {item.label}
-                    </Link>
-                  ))}
+            <SheetContent side="left" className="pr-0 bg-background border-border overflow-y-auto">
+              <SheetHeader>
+                <SheetTitle className="text-left font-extrabold text-lg tracking-tight bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent flex items-center gap-2">
+                  <JumpingDog className="w-6 h-6" />
+                  DogUp
+                </SheetTitle>
+              </SheetHeader>
+              <div className="py-4 space-y-5">
+                <Link href="/" className="flex items-center gap-2 text-base font-bold text-muted-foreground hover:text-foreground transition-colors">
+                  <Terminal className="h-4 w-4" />
+                  {t("nav.home")}
+                </Link>
+
+                <div>
+                  <p className="text-xs font-bold text-muted-foreground/50 uppercase tracking-widest mb-2 px-0.5">
+                    {zh ? "开发工具" : "Dev Tools"}
+                  </p>
+                  <div className="space-y-0.5">
+                    {devTools.map(tool => (
+                      <Link key={tool.href} href={tool.href}
+                        className="flex items-center gap-2.5 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                        <span className="text-muted-foreground/50">{tool.icon}</span>
+                        {tool.label}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-xs font-bold text-muted-foreground/50 uppercase tracking-widest mb-2 px-0.5">
+                    {zh ? "生活工具" : "Life Tools"}
+                  </p>
+                  <div className="space-y-0.5">
+                    {lifeTools.map(tool => (
+                      <Link key={tool.href} href={tool.href}
+                        className="flex items-center gap-2.5 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                        <span className="text-muted-foreground/50">{tool.icon}</span>
+                        {tool.label}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
               </div>
             </SheetContent>
           </Sheet>

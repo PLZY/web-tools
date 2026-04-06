@@ -3,10 +3,10 @@
 import LogConfigGenerator from "@/components/tools/LogConfigGenerator";
 import { ToolFAQ } from "@/components/tools/ToolFAQ";
 import { useTranslation } from "@/lib/i18n";
-import Link from "next/link";
+import { FileText } from "lucide-react";
 
 export default function LogConfigPage() {
-  const { t, lang } = useTranslation();
+  const { t } = useTranslation();
 
   const faqs = [
     { q: t('faq.logconfig.q1'), a: t('faq.logconfig.a1') },
@@ -29,11 +29,15 @@ export default function LogConfigPage() {
 
       <ToolFAQ faqs={faqs} />
 
-      <div className="flex justify-center pb-4">
-        <Link href="/guides/production-ready-log-configuration" className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-colors">
-          {lang === 'zh' ? '阅读 Logback/Log4j2 生产级最佳配置指南 →' : 'Read Production-Ready Logging Guide →'}
-        </Link>
-      </div>
+      <section className="bg-muted/50 dark:bg-muted/20 rounded-2xl py-8 px-6">
+        <div className="bg-card rounded-2xl p-7 sm:p-8 border border-border">
+          <h2 className="text-xl font-bold mb-4 flex items-center">
+            <FileText className="w-5 h-5 mr-3 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+            {t('seo.logconfig.what')}
+          </h2>
+          <p className="text-muted-foreground leading-relaxed">{t('seo.logconfig.what.body')}</p>
+        </div>
+      </section>
     </div>
   );
 }

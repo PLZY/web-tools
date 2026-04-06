@@ -49,12 +49,6 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/dog.svg" type="image/svg+xml" />
         <meta name="google-adsense-account" content="ca-pub-8178726174601950" />
-        <Script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8178726174601950"
-          crossOrigin="anonymous"
-          strategy="afterInteractive"
-        />
       </head>
       <body className={`${inter.className} min-h-screen bg-background text-foreground antialiased`}>
         <ThemeProvider
@@ -73,6 +67,11 @@ export default function RootLayout({
             </div>
           </TranslationProvider>
         </ThemeProvider>
+        <Script
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8178726174601950"
+          crossOrigin="anonymous"
+          strategy="lazyOnload"
+        />
       </body>
     </html>
   );

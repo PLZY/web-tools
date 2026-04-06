@@ -62,7 +62,8 @@ function escapeUnix(value: string): string {
   return "'" + value.replace(/'/g, "'\\''") + "'";
 }
 function escapeCmd(value: string): string {
-  return '"' + value.replace(/\\/g, "\\\\").replace(/"/g, '\\"') + '"';
+  // In CMD: % expands env-vars even inside double quotes → escape as %%
+  return '"' + value.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/%/g, "%%") + '"';
 }
 function escapePowerShell(value: string): string {
   return "'" + value.replace(/'/g, "''") + "'";
@@ -94,7 +95,8 @@ function generateCurl(state: CurlState, platform: Platform, multiline: boolean):
   const nl = multiline ? "\n  " : " ";
   const sep = multiline ? cont + nl : " ";
 
-  const parts: string[] = ["curl"];
+  // PowerShell aliases `curl` → Invoke-WebRequest; must use `curl.exe` for the real binary
+  const parts: string[] = [platform === "powershell" ? "curl.exe" : "curl"];
 
   // Flags
   if (state.streaming) parts.push("-N");
@@ -179,11 +181,16 @@ function parseCurlCommand(raw: string): Partial<CurlState> | null {
   s = s.replace(/\s*\^\s*\n\s*/g, " ");
   s = s.replace(/\s*`\s*\n\s*/g, " ");
 
+  // Support both "curl" and "curl.exe" (PowerShell)
   if (!s.startsWith("curl")) return null;
+  let startIdx = 4;
+  if (s.startsWith("curl.exe")) startIdx = 8;
+  // skip whitespace after command name
+  while (startIdx < s.length && /\s/.test(s[startIdx])) startIdx++;
 
   // Tokenize
   const tokens: string[] = [];
-  let i = 4;
+  let i = startIdx;
   while (i < s.length) {
     while (i < s.length && /\s/.test(s[i])) i++;
     if (i >= s.length) break;
@@ -200,6 +207,17 @@ function parseCurlCommand(raw: string): Partial<CurlState> | null {
       while (i < s.length && !/\s/.test(s[i])) { token += s[i]; i++; }
     }
     tokens.push(token);
+  }
+
+  // Expand combined single-char no-value flags: -sLv → [-s, -L, -v]
+  const NO_VAL_CHARS = new Set(["N", "L", "k", "v", "s", "S", "I"]);
+  const expandedTokens: string[] = [];
+  for (const tok of tokens) {
+    if (/^-[A-Za-z]{2,}$/.test(tok) && [...tok.slice(1)].every(c => NO_VAL_CHARS.has(c))) {
+      for (const ch of tok.slice(1)) expandedTokens.push(`-${ch}`);
+    } else {
+      expandedTokens.push(tok);
+    }
   }
 
   let method: HttpMethod = "GET";
@@ -219,19 +237,19 @@ function parseCurlCommand(raw: string): Partial<CurlState> | null {
   const multipartFields: { key: string; value: string; isFile: boolean; fileName: string }[] = [];
 
   let idx = 0;
-  while (idx < tokens.length) {
-    const tok = tokens[idx];
+  while (idx < expandedTokens.length) {
+    const tok = expandedTokens[idx];
 
     if (tok === "-X" || tok === "--request") {
       idx++;
-      if (idx < tokens.length) {
-        const m = tokens[idx].toUpperCase() as HttpMethod;
+      if (idx < expandedTokens.length) {
+        const m = expandedTokens[idx].toUpperCase() as HttpMethod;
         if (METHODS.includes(m)) method = m;
       }
     } else if (tok === "-H" || tok === "--header") {
       idx++;
-      if (idx < tokens.length) {
-        const hStr = tokens[idx];
+      if (idx < expandedTokens.length) {
+        const hStr = expandedTokens[idx];
         const ci = hStr.indexOf(":");
         if (ci !== -1) {
           const key = hStr.substring(0, ci).trim();
@@ -239,29 +257,32 @@ function parseCurlCommand(raw: string): Partial<CurlState> | null {
           if (key.toLowerCase() === "authorization" && value.toLowerCase().startsWith("bearer ")) {
             bearerToken = value.substring(7).trim();
           } else if (key.toLowerCase() === "content-type") {
-            // Don't add to headers — we'll infer bodyType
+            // Infer bodyType AND keep in headers for visibility
             if (value.includes("application/json")) bodyType = "json";
             else if (value.includes("x-www-form-urlencoded")) bodyType = "form";
             else if (value.includes("multipart")) bodyType = "multipart";
-            else headers.push({ key, value });
+            headers.push({ key, value });
           } else {
             headers.push({ key, value });
           }
         }
       }
-    } else if (tok === "-d" || tok === "--data" || tok === "--data-raw" || tok === "--data-binary") {
+    } else if (tok === "-d" || tok === "--data" || tok === "--data-raw" || tok === "--data-binary" || tok === "--data-urlencode") {
       idx++;
-      if (idx < tokens.length) {
-        bodyRaw = tokens[idx];
-        try { bodyRaw = JSON.stringify(JSON.parse(bodyRaw), null, 2); } catch { /* keep */ }
+      if (idx < expandedTokens.length) {
+        bodyRaw = expandedTokens[idx];
+        // Single-quoted shell strings pass \" literally; unescape before JSON.parse
+        const unescaped = bodyRaw.replace(/\\"/g, '"');
+        try { bodyRaw = JSON.stringify(JSON.parse(unescaped), null, 2); }
+        catch { try { bodyRaw = JSON.stringify(JSON.parse(bodyRaw), null, 2); } catch { /* keep raw */ } }
         if (method === "GET") method = "POST";
         if (bodyType === "none") bodyType = "json"; // default guess
       }
     } else if (tok === "-F" || tok === "--form") {
       idx++;
-      if (idx < tokens.length) {
+      if (idx < expandedTokens.length) {
         bodyType = "multipart";
-        const fStr = tokens[idx];
+        const fStr = expandedTokens[idx];
         const eqIdx = fStr.indexOf("=");
         if (eqIdx !== -1) {
           const key = fStr.substring(0, eqIdx);
@@ -275,8 +296,8 @@ function parseCurlCommand(raw: string): Partial<CurlState> | null {
       }
     } else if (tok === "-b" || tok === "--cookie") {
       idx++;
-      if (idx < tokens.length) {
-        const cStr = tokens[idx];
+      if (idx < expandedTokens.length) {
+        const cStr = expandedTokens[idx];
         cStr.split(";").forEach((pair) => {
           const eqIdx = pair.indexOf("=");
           if (eqIdx !== -1) {
@@ -296,13 +317,14 @@ function parseCurlCommand(raw: string): Partial<CurlState> | null {
       silent = true;
     } else if (tok === "--max-time" || tok === "--connect-timeout") {
       idx++;
-      if (idx < tokens.length) timeout = tokens[idx];
+      if (idx < expandedTokens.length) timeout = expandedTokens[idx];
     } else if (tok.startsWith("-")) {
-      if (idx + 1 < tokens.length && !tokens[idx + 1].startsWith("-") && !tokens[idx + 1].startsWith("http")) {
+      // Unknown flag — skip its value argument if it looks like one
+      if (idx + 1 < expandedTokens.length && !expandedTokens[idx + 1].startsWith("-")) {
         idx++;
       }
     } else {
-      if (!url && (tok.startsWith("http://") || tok.startsWith("https://") || !tok.startsWith("-"))) {
+      if (!url) {
         url = tok;
       }
     }

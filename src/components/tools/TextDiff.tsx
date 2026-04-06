@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import { useTranslation } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
-import { ChevronUp, ChevronDown, Trash2, Pencil } from "lucide-react";
+import { ChevronUp, ChevronDown, Trash2, Pencil, GitCompare } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -177,8 +177,9 @@ function diffLines(left: string, right: string): LineResult[] {
 
 // ─── Stripe patterns ─────────────────────────────────────────────────────────
 
-const STRIPE_DEL = "repeating-linear-gradient(-45deg,transparent,transparent 4px,rgba(239,68,68,0.07) 4px,rgba(239,68,68,0.07) 8px)";
-const STRIPE_INS = "repeating-linear-gradient(-45deg,transparent,transparent 4px,rgba(34,197,94,0.07) 4px,rgba(34,197,94,0.07) 8px)";
+const STRIPE_GHOST = "repeating-linear-gradient(-45deg,transparent,transparent 4px,rgba(120,120,120,0.09) 4px,rgba(120,120,120,0.09) 8px)";
+const STRIPE_DEL = STRIPE_GHOST;
+const STRIPE_INS = STRIPE_GHOST;
 
 // ─── Render helpers ───────────────────────────────────────────────────────────
 
@@ -187,9 +188,7 @@ function CharParts({ parts }: { parts: CharOp[] }) {
     <>
       {parts.map((op, i) => {
         if (op.type === "equal") return <span key={i}>{op.text}</span>;
-        if (op.type === "delete")
-          return <span key={i} className="text-red-600 dark:text-red-400 font-semibold">{op.text}</span>;
-        return <span key={i} className="text-green-600 dark:text-green-400 font-semibold">{op.text}</span>;
+        return <span key={i} style={{ color: "#ff1f3d" }} className="font-semibold">{op.text}</span>;
       })}
     </>
   );
@@ -222,37 +221,13 @@ export default function TextDiff() {
   const [stats, setStats] = useState({ added: 0, deleted: 0, changed: 0 });
   const [diffNav, setDiffNav] = useState<number[]>([]);
   const [navIdx, setNavIdx] = useState(0);
-  // Which panel has focus (showing textarea); null = both show diff view
-  const [focused, setFocused] = useState<"left" | "right" | null>(null);
+  // "edit" = both panels show textareas, "diff" = both panels show diff view
+  const [mode, setMode] = useState<"edit" | "diff">("edit");
 
   const rowRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const leftScrollRef = useRef<HTMLDivElement>(null);
   const rightScrollRef = useRef<HTMLDivElement>(null);
   const scrollingRef = useRef(false);
-  const leftTextareaRef = useRef<HTMLTextAreaElement>(null);
-  const rightTextareaRef = useRef<HTMLTextAreaElement>(null);
-
-  // Auto-diff with 150ms debounce
-  useEffect(() => {
-    clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      if (!leftText && !rightText) {
-        setResults([]); setDiffNav([]); setStats({ added: 0, deleted: 0, changed: 0 });
-        return;
-      }
-      const res = diffLines(leftText, rightText);
-      let added = 0, deleted = 0, changed = 0;
-      const nav: number[] = [];
-      res.forEach((r, i) => {
-        if (r.type === "insert") { added++; nav.push(i); }
-        else if (r.type === "delete") { deleted++; nav.push(i); }
-        else if (r.type === "replace") { changed++; nav.push(i); }
-      });
-      setResults(res); setStats({ added, deleted, changed }); setDiffNav(nav); setNavIdx(0);
-    }, 150);
-    return () => clearTimeout(debounceRef.current);
-  }, [leftText, rightText]);
 
   // Synchronized scrolling
   const handleScroll = useCallback((source: "left" | "right") => {
@@ -264,11 +239,18 @@ export default function TextDiff() {
     requestAnimationFrame(() => { scrollingRef.current = false; });
   }, []);
 
-  // Navigation
+  // Navigation — directly sets both panels to the same scroll position
   const scrollToIdx = useCallback((ni: number) => {
     const rowIdx = diffNav[ni];
     if (rowIdx == null) return;
-    rowRefs.current[rowIdx]?.scrollIntoView({ behavior: "smooth", block: "center" });
+    const el = rowRefs.current[rowIdx];
+    const container = leftScrollRef.current;
+    if (!el || !container) return;
+    const target = Math.max(0, el.offsetTop - container.clientHeight / 2 + el.offsetHeight / 2);
+    scrollingRef.current = true;
+    container.scrollTop = target;
+    if (rightScrollRef.current) rightScrollRef.current.scrollTop = target;
+    requestAnimationFrame(() => { scrollingRef.current = false; });
   }, [diffNav]);
 
   const goNext = useCallback(() => {
@@ -283,17 +265,32 @@ export default function TextDiff() {
     setNavIdx(ni); scrollToIdx(ni);
   }, [navIdx, diffNav, scrollToIdx]);
 
+  const MAX_LINES = 5000;
+  const handleCompare = () => {
+    if (!leftText && !rightText) return;
+    const leftLineCount = leftText.split("\n").length;
+    const rightLineCount = rightText.split("\n").length;
+    if (leftLineCount > MAX_LINES || rightLineCount > MAX_LINES) {
+      // Prevent browser freeze on huge inputs
+      alert(t('diff.tooLarge'));
+      return;
+    }
+    const res = diffLines(leftText, rightText);
+    let added = 0, deleted = 0, changed = 0;
+    const nav: number[] = [];
+    res.forEach((r, i) => {
+      if (r.type === "insert") { added++; nav.push(i); }
+      else if (r.type === "delete") { deleted++; nav.push(i); }
+      else if (r.type === "replace") { changed++; nav.push(i); }
+    });
+    setResults(res); setStats({ added, deleted, changed }); setDiffNav(nav); setNavIdx(0);
+    setMode("diff");
+  };
+
   const handleClear = () => {
     setLeftText(""); setRightText("");
     setResults([]); setDiffNav([]); setStats({ added: 0, deleted: 0, changed: 0 });
-    setFocused(null);
-  };
-
-  const enterEdit = (side: "left" | "right") => {
-    setFocused(side);
-    setTimeout(() => {
-      (side === "left" ? leftTextareaRef : rightTextareaRef).current?.focus();
-    }, 0);
+    setMode("edit");
   };
 
   const hasContent = leftText.length > 0 || rightText.length > 0;
@@ -301,9 +298,8 @@ export default function TextDiff() {
   const isIdentical = hasResults && stats.added === 0 && stats.deleted === 0 && stats.changed === 0;
   const showDiff = hasResults && !isIdentical;
 
-  // A side shows textarea when: it has no text (needs input) OR it's focused for editing
-  const leftIsEditing = !leftText || focused === "left";
-  const rightIsEditing = !rightText || focused === "right";
+  const leftIsEditing = mode === "edit";
+  const rightIsEditing = mode === "edit";
 
   // Build rendered lines for diff view
   const { leftLines, rightLines } = useMemo(() => {
@@ -316,13 +312,15 @@ export default function TextDiff() {
         rl.push({ no: row.rightNo, content: row.rightText || "\u00A0", rowBg: "", resultIdx: idx });
       } else if (row.type === "replace") {
         ll.push({ no: row.leftNo, content: <CharParts parts={row.leftParts!} />, rowBg: "bg-red-50 dark:bg-red-500/5", resultIdx: idx });
-        rl.push({ no: row.rightNo, content: <CharParts parts={row.rightParts!} />, rowBg: "bg-green-50 dark:bg-green-500/5", resultIdx: idx });
+        rl.push({ no: row.rightNo, content: <CharParts parts={row.rightParts!} />, rowBg: "bg-red-50 dark:bg-red-500/5", resultIdx: idx });
       } else if (row.type === "delete") {
-        ll.push({ no: row.leftNo, content: row.leftText || "\u00A0", rowBg: "bg-red-50 dark:bg-red-500/5", resultIdx: idx });
+        const delParts: CharOp[] = row.leftText ? [{ type: "delete", text: row.leftText }] : [];
+        ll.push({ no: row.leftNo, content: delParts.length ? <CharParts parts={delParts} /> : "\u00A0", rowBg: "bg-red-50 dark:bg-red-500/5", resultIdx: idx });
         rl.push({ no: undefined, content: null, rowBg: "", stripe: STRIPE_DEL, isEmpty: true, resultIdx: idx });
       } else {
+        const insParts: CharOp[] = row.rightText ? [{ type: "insert", text: row.rightText }] : [];
         ll.push({ no: undefined, content: null, rowBg: "", stripe: STRIPE_INS, isEmpty: true, resultIdx: idx });
-        rl.push({ no: row.rightNo, content: row.rightText || "\u00A0", rowBg: "bg-green-50 dark:bg-green-500/5", resultIdx: idx });
+        rl.push({ no: row.rightNo, content: insParts.length ? <CharParts parts={insParts} /> : "\u00A0", rowBg: "bg-red-50 dark:bg-red-500/5", resultIdx: idx });
       }
     });
     return { leftLines: ll, rightLines: rl };
@@ -338,11 +336,11 @@ export default function TextDiff() {
           <Trash2 className="w-3 h-3" />{t('diff.clear')}
         </Button>
 
-        {isIdentical && (
+        {mode === "diff" && isIdentical && (
           <span className="text-sm text-green-600 dark:text-green-400 font-semibold">{t('diff.identical')}</span>
         )}
 
-        {hasResults && !isIdentical && (
+        {mode === "diff" && showDiff && (
           <>
             <span className="text-sm text-muted-foreground">
               <span className="text-green-600 dark:text-green-400 font-semibold">+{stats.added}</span>
@@ -352,7 +350,7 @@ export default function TextDiff() {
               <span className="text-yellow-600 dark:text-yellow-400 font-semibold">~{stats.changed}</span>
             </span>
             {diffNav.length > 0 && (
-              <div className="flex items-center gap-1 ml-auto">
+              <div className="flex items-center gap-1">
                 <span className="text-xs tabular-nums text-muted-foreground mr-1">{navIdx + 1} / {diffNav.length}</span>
                 <Button variant="outline" size="icon" className="h-7 w-7" onClick={goPrev}><ChevronUp className="w-3.5 h-3.5" /></Button>
                 <Button variant="outline" size="icon" className="h-7 w-7" onClick={goNext}><ChevronDown className="w-3.5 h-3.5" /></Button>
@@ -360,27 +358,43 @@ export default function TextDiff() {
             )}
           </>
         )}
+
+        <div className="ml-auto">
+          {mode === "edit" ? (
+            <Button size="sm" onClick={handleCompare} disabled={!hasContent} className="h-7 text-xs gap-1.5">
+              <GitCompare className="w-3 h-3" />{t('diff.compare')}
+            </Button>
+          ) : (
+            <Button size="sm" variant="outline" onClick={() => setMode("edit")} className="h-7 text-xs gap-1.5">
+              <Pencil className="w-3 h-3" />{t('diff.edit')}
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Main panels */}
       <div className="rounded-xl border border-border overflow-hidden">
         {/* Headers */}
         <div className="grid grid-cols-2 border-b border-border bg-muted/40">
-          <div className="px-4 py-2 text-xs font-bold text-red-500 dark:text-red-400 border-r border-border flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-red-500 inline-block shrink-0" />
-            {t('diff.left')}
-            {showDiff && !leftIsEditing && (
-              <button onClick={() => enterEdit("left")} className="ml-auto text-muted-foreground/50 hover:text-foreground transition-colors" title="编辑">
-                <Pencil className="w-3 h-3" />
+          <div className="px-4 py-2 border-r border-border flex items-center justify-between gap-1.5">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-red-500 dark:text-red-400">
+              <span className="w-2 h-2 rounded-full bg-red-500 inline-block shrink-0" />
+              {t('diff.left')}
+            </div>
+            {mode === "diff" && (
+              <button onClick={() => setMode("edit")} className="text-[10px] font-mono text-muted-foreground/60 hover:text-foreground transition-colors cursor-pointer">
+                🔒 {t('diff.locked')}
               </button>
             )}
           </div>
-          <div className="px-4 py-2 text-xs font-bold text-green-600 dark:text-green-400 flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-green-500 inline-block shrink-0" />
-            {t('diff.right')}
-            {showDiff && !rightIsEditing && (
-              <button onClick={() => enterEdit("right")} className="ml-auto text-muted-foreground/50 hover:text-foreground transition-colors" title="编辑">
-                <Pencil className="w-3 h-3" />
+          <div className="px-4 py-2 flex items-center justify-between gap-1.5">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-red-500 dark:text-red-400">
+              <span className="w-2 h-2 rounded-full bg-red-500 inline-block shrink-0" />
+              {t('diff.right')}
+            </div>
+            {mode === "diff" && (
+              <button onClick={() => setMode("edit")} className="text-[10px] font-mono text-muted-foreground/60 hover:text-foreground transition-colors cursor-pointer">
+                🔒 {t('diff.locked')}
               </button>
             )}
           </div>
@@ -392,22 +406,17 @@ export default function TextDiff() {
           <div className="border-r border-border overflow-hidden flex flex-col">
             {leftIsEditing ? (
               <textarea
-                ref={leftTextareaRef}
                 value={leftText}
                 onChange={e => setLeftText(e.target.value)}
-                onFocus={() => setFocused("left")}
-                onBlur={() => { if (leftText) setFocused(null); }}
                 placeholder={t('diff.leftPlaceholder')}
                 className="w-full h-full p-3 font-mono text-sm resize-none bg-transparent outline-none placeholder:text-muted-foreground/40"
                 spellCheck={false}
-                autoFocus={focused === "left"}
               />
             ) : (
               <div
                 ref={leftScrollRef}
-                className="flex-1 overflow-auto cursor-text"
+                className="flex-1 overflow-auto bg-muted/20"
                 onScroll={() => handleScroll("left")}
-                onClick={() => enterEdit("left")}
               >
                 {leftLines.map((line, i) => {
                   const isDiff = results[line.resultIdx]?.type !== "equal";
@@ -429,22 +438,17 @@ export default function TextDiff() {
           <div className="overflow-hidden flex flex-col">
             {rightIsEditing ? (
               <textarea
-                ref={rightTextareaRef}
                 value={rightText}
                 onChange={e => setRightText(e.target.value)}
-                onFocus={() => setFocused("right")}
-                onBlur={() => { if (rightText) setFocused(null); }}
                 placeholder={t('diff.rightPlaceholder')}
                 className="w-full h-full p-3 font-mono text-sm resize-none bg-transparent outline-none placeholder:text-muted-foreground/40"
                 spellCheck={false}
-                autoFocus={focused === "right"}
               />
             ) : (
               <div
                 ref={rightScrollRef}
-                className="flex-1 overflow-auto cursor-text"
+                className="flex-1 overflow-auto bg-muted/20"
                 onScroll={() => handleScroll("right")}
-                onClick={() => enterEdit("right")}
               >
                 {rightLines.map((line, i) => {
                   const isDiff = results[line.resultIdx]?.type !== "equal";

@@ -86,22 +86,30 @@ function tryDecode(bytes: Uint8Array, enc: string): string {
   try { return new TextDecoder(enc, { fatal: true }).decode(bytes); } catch { return ""; }
 }
 
+/** Parse hex string (supports spaces, colons, dashes, and 0x prefixes) into bytes */
+function parseHexInput(s: string): Uint8Array | null {
+  // Strip 0x/0X and \x prefixes (e.g. "0xE4 0xBD 0xA0" or "\xE4\xBD\xA0" → "E4BDA0")
+  const hex = s.replace(/0x/gi, "").replace(/\\x/gi, "").replace(/[\s:,\-]/g, "").toLowerCase();
+  if (!hex || !/^[0-9a-f]+$/.test(hex) || hex.length % 2 !== 0) return null;
+  const buf = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < buf.length; i++) {
+    buf[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+  }
+  return buf;
+}
+
 // ─── Matrix config ──────────────────────────────────────────────────────────
 
-type SrcRow = { id: string; label: string; tip: string; encode: (s: string) => Uint8Array | null };
+type SrcRow = { id: string; label: string; tip: string; tipZh: string; encode: (s: string) => Uint8Array | null };
 type TgtCol = { id: string; label: string; enc: string };
 
 const SOURCES: SrcRow[] = [
-  // Windows-1252 covers the full 0x00-0xFF byte range including the 0x80-0x9F zone
-  // (€ • Š etc.) that browsers actually render when UTF-8 bytes are read as "Latin-1".
-  // Strict ISO-8859-1 maps 0x80-0x9F to invisible C1 control chars, but browsers use
-  // Windows-1252 for those bytes — so Win-1252 is the practical standard here.
-  { id: "win1252", label: "Win-1252 / Latin-1", tip: "西欧单字节编码（含€•Š等），网页乱码最常见来源", encode: s => encodeViaTable(s, "windows-1252") },
-  { id: "gbk",     label: "GBK",               tip: "简体中文双字节编码",                           encode: s => encodeViaTable(s, "gbk") },
-  { id: "big5",    label: "Big5",              tip: "繁体中文双字节编码",                           encode: s => encodeViaTable(s, "big5") },
-  { id: "sjis",    label: "Shift-JIS",         tip: "日文编码",                                    encode: s => encodeViaTable(s, "shift_jis") },
-  { id: "euckr",   label: "EUC-KR",            tip: "韩文编码",                                    encode: s => encodeViaTable(s, "euc-kr") },
-  { id: "utf8",    label: "UTF-8",             tip: "多字节→字节（双重编码修复）",                  encode: asUtf8 },
+  { id: "win1252", label: "Win-1252 / Latin-1", tip: "Western single-byte", tipZh: "西欧单字节编码", encode: s => encodeViaTable(s, "windows-1252") },
+  { id: "gbk",     label: "GBK",               tip: "Simplified Chinese",   tipZh: "简体中文双字节编码", encode: s => encodeViaTable(s, "gbk") },
+  { id: "big5",    label: "Big5",              tip: "Traditional Chinese",  tipZh: "繁体中文双字节编码", encode: s => encodeViaTable(s, "big5") },
+  { id: "sjis",    label: "Shift-JIS",         tip: "Japanese",             tipZh: "日文编码", encode: s => encodeViaTable(s, "shift_jis") },
+  { id: "euckr",   label: "EUC-KR",            tip: "Korean",               tipZh: "韩文编码", encode: s => encodeViaTable(s, "euc-kr") },
+  { id: "utf8",    label: "UTF-8",             tip: "Multi-byte → bytes",   tipZh: "多字节→字节（双重编码修复）", encode: asUtf8 },
 ];
 
 const TARGETS: TgtCol[] = [
@@ -117,95 +125,187 @@ const TARGETS: TgtCol[] = [
 
 const CJK_RE = /[\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\uac00-\ud7a3\u3400-\u4dbf]{2,}/;
 
-type Cell = { text: string; hit: boolean; empty: boolean; srcLabel: string; tgtLabel: string };
+type Cell = { text: string; hit: boolean; empty: boolean; srcLabel: string; tgtLabel: string; normalized?: boolean };
+type HexCell = { text: string; hit: boolean; empty: boolean; tgtLabel: string };
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export default function Mojibake() {
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
   const [input, setInput] = useState("");
+  const [hexMode, setHexMode] = useState(false);
   const [matrix, setMatrix] = useState<Cell[][] | null>(null);
+  const [hexResults, setHexResults] = useState<HexCell[] | null>(null);
+  const [hexError, setHexError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
     clearTimeout(debounceRef.current);
-    if (!input.trim()) { setMatrix(null); setLoading(false); return; }
+    if (!input.trim()) {
+      setMatrix(null);
+      setHexResults(null);
+      setHexError(null);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     debounceRef.current = setTimeout(() => {
-      const mat: Cell[][] = SOURCES.map(src =>
-        TARGETS.map(tgt => {
-          if (src.id === tgt.id) return { text: "(同编码，跳过)", hit: false, empty: true, srcLabel: src.label, tgtLabel: tgt.label };
-          const bytes = src.encode(input);
-          if (!bytes) return { text: "—", hit: false, empty: true, srcLabel: src.label, tgtLabel: tgt.label };
-          const decoded = tryDecode(bytes, tgt.enc);
-          if (!decoded) return { text: "⚠", hit: false, empty: true, srcLabel: src.label, tgtLabel: tgt.label };
-          const hit = CJK_RE.test(decoded);
-          return { text: decoded, hit, empty: false, srcLabel: src.label, tgtLabel: tgt.label };
-        })
-      );
-      setMatrix(mat);
+      if (hexMode) {
+        const bytes = parseHexInput(input);
+        if (!bytes) {
+          setHexError(lang === "en" ? "Invalid hex format. Enter bytes like: E4 BD A0 E5 A5 BD" : "无效的十六进制格式，请输入如 E4 BD A0 E5 A5 BD 的格式（每字节两���十六进制）");
+          setHexResults(null);
+          setLoading(false);
+          return;
+        }
+        setHexError(null);
+        const results: HexCell[] = TARGETS.map(tgt => {
+          const text = tryDecode(bytes, tgt.enc);
+          if (!text) return { text: "⚠", hit: false, empty: true, tgtLabel: tgt.label };
+          const hit = CJK_RE.test(text);
+          return { text, hit, empty: false, tgtLabel: tgt.label };
+        });
+        setHexResults(results);
+        setMatrix(null);
+      } else {
+        const mat: Cell[][] = SOURCES.map(src =>
+          TARGETS.map(tgt => {
+            if (src.id === tgt.id) return { text: "—", hit: false, empty: true, srcLabel: src.label, tgtLabel: tgt.label };
+            const bytes = src.encode(input);
+            if (!bytes) return { text: "—", hit: false, empty: true, srcLabel: src.label, tgtLabel: tgt.label };
+            let decoded = tryDecode(bytes, tgt.enc);
+            let normalized = false;
+
+            // NBSP fallback: when clipboard normalizes 0xA0 bytes to regular space 0x20,
+            // the byte stream becomes corrupted. Retry with spaces → U+00A0 substitution.
+            // Example: "ä½ å¥½" with regular space → "ä½\u00A0å¥½" → correctly recovers "你好".
+            if (!decoded && input.includes(" ")) {
+              const nbspInput = input.replace(/ /g, "\u00A0");
+              const nbspBytes = src.encode(nbspInput);
+              if (nbspBytes) {
+                const nbspDecoded = tryDecode(nbspBytes, tgt.enc);
+                if (nbspDecoded) {
+                  decoded = nbspDecoded;
+                  normalized = true;
+                }
+              }
+            }
+
+            if (!decoded) return { text: "⚠", hit: false, empty: true, srcLabel: src.label, tgtLabel: tgt.label };
+            const hit = CJK_RE.test(decoded);
+            return { text: decoded, hit, empty: false, srcLabel: src.label, tgtLabel: tgt.label, normalized };
+          })
+        );
+        setMatrix(mat);
+        setHexResults(null);
+      }
       setLoading(false);
     }, 300);
     return () => clearTimeout(debounceRef.current);
-  }, [input]);
+  }, [input, hexMode]);
 
   const hits = useMemo(() => {
+    if (hexMode) {
+      if (!hexResults) return [];
+      return hexResults
+        .filter(r => r.hit)
+        .map(r => ({ text: r.text, srcLabel: "HEX 原始字节", tgtLabel: r.tgtLabel, normalized: false }));
+    }
     if (!matrix) return [];
-    const found: Cell[] = [];
+    const found: Array<{ text: string; srcLabel: string; tgtLabel: string; normalized?: boolean }> = [];
     matrix.forEach(row => row.forEach(cell => { if (cell.hit) found.push(cell); }));
     return found;
-  }, [matrix]);
+  }, [matrix, hexResults, hexMode]);
 
   const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text).then(() => toast.success("已复制"));
+    navigator.clipboard.writeText(text).then(() => toast.success(t('sqlStitcher.copied')));
+  };
+
+  const handleModeSwitch = (toHex: boolean) => {
+    setHexMode(toHex);
+    setInput("");
+    setMatrix(null);
+    setHexResults(null);
+    setHexError(null);
   };
 
   return (
     <div className="space-y-5">
       {/* Explanation */}
       <div className="rounded-xl border border-border/50 bg-muted/30 px-4 py-3 text-sm space-y-2">
-        <p className="font-semibold text-foreground">🔬 工作原理</p>
-        <p className="text-muted-foreground leading-relaxed">
-          乱码 = <strong>正确的字节序列</strong>被用<strong>错误的编码</strong>来显示。
-          本工具穷举「<span className="text-primary font-semibold">把乱码当成 A 编码的文字 → 还原成字节 → 再用 B 编码解读</span>」所有组合（{SOURCES.length}×{TARGETS.length} 矩阵），
-          <span className="text-green-500 font-semibold">绿色高亮</span>的格子即为检测到有意义文字的结果。
-        </p>
-        <p className="text-muted-foreground/80 text-xs">
-          例①（中文→GBK乱码）："你好"以 UTF-8 存储 → 被 GBK 打开变成"浣犲ソ" → 粘贴 → 表格"行=GBK, 列=UTF-8"显示"你好"<br />
-          例②（网页西欧乱码）："你好"以 UTF-8 存储 → 被 Win-1252/Latin-1 读取变成"ä½ å¥½" → 粘贴 → 表格"行=Win-1252, 列=UTF-8"显示"你好"
-        </p>
+        <p className="font-semibold text-foreground">🔬 {t('mojibake.howItWorks')}</p>
+        <p className="text-muted-foreground leading-relaxed"
+          dangerouslySetInnerHTML={{ __html: t('mojibake.howItWorks.body').replace('{rows}', String(SOURCES.length)).replace('{cols}', String(TARGETS.length)) }}
+        />
       </div>
 
       {/* Input */}
       <div className="space-y-1.5">
         <div className="flex items-center justify-between">
-          <label className="text-sm font-semibold text-muted-foreground">{t('mojibake.inputLabel')}</label>
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-semibold text-muted-foreground">
+              {hexMode ? t('mojibake.hexInputLabel') : t('mojibake.inputLabel')}
+            </label>
+            <div className="flex rounded-md border border-border overflow-hidden text-xs">
+              <button
+                onClick={() => handleModeSwitch(false)}
+                className={cn(
+                  "px-2.5 py-1 transition-colors",
+                  !hexMode ? "bg-primary text-primary-foreground font-semibold" : "text-muted-foreground hover:bg-muted"
+                )}
+              >
+                {t('mojibake.mode.text')}
+              </button>
+              <button
+                onClick={() => handleModeSwitch(true)}
+                className={cn(
+                  "px-2.5 py-1 transition-colors border-l border-border",
+                  hexMode ? "bg-primary text-primary-foreground font-semibold" : "text-muted-foreground hover:bg-muted"
+                )}
+              >
+                HEX
+              </button>
+            </div>
+          </div>
           {input && (
-            <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setInput("")}>清空</Button>
+            <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setInput("")}>{t('mojibake.clear')}</Button>
           )}
         </div>
         <Textarea
           value={input}
           onChange={e => setInput(e.target.value)}
-          placeholder={t('mojibake.inputPlaceholder')}
+          placeholder={hexMode
+            ? t('mojibake.hexPlaceholder')
+            : t('mojibake.inputPlaceholder')
+          }
           className="h-24 font-mono text-sm resize-none"
         />
-        {!input && <p className="text-xs text-muted-foreground/60">粘贴乱码文本后自动开始穷举解码</p>}
+        {!input && (
+          <p className="text-xs text-muted-foreground/60">
+            {hexMode ? t('mojibake.hexHint') : t('mojibake.textHint')}
+          </p>
+        )}
+        {hexError && (
+          <p className="text-xs text-destructive">{hexError}</p>
+        )}
       </div>
 
-      {loading && <div className="text-center py-4 text-sm text-muted-foreground">正在构建编码表并穷举解码…</div>}
+      {loading && <div className="text-center py-4 text-sm text-muted-foreground">{t('mojibake.loading')}</div>}
 
       {/* Hit Results Banner */}
       {hits.length > 0 && (
         <div className="rounded-lg border border-green-500/30 bg-green-500/5 px-4 py-3 space-y-2">
-          <p className="text-sm font-semibold text-green-500">✓ 找到 {hits.length} 个候选结果</p>
+          <p className="text-sm font-semibold text-green-500">✓ {t('mojibake.hitsFound').replace('{count}', String(hits.length))}</p>
           {hits.map((cell, i) => (
             <div key={i} className="flex items-start gap-3 bg-green-500/5 rounded-lg px-3 py-2">
               <div className="flex-1 min-w-0">
                 <div className="text-xs text-muted-foreground mb-1">
-                  乱码以 <span className="font-semibold text-primary">{cell.srcLabel}</span> 读取字节 →
-                  用 <span className="font-semibold text-primary">{cell.tgtLabel}</span> 重新解码
+                  {t('mojibake.hitDesc.src')} <span className="font-semibold text-primary">{cell.srcLabel}</span> →
+                  {t('mojibake.hitDesc.tgt')} <span className="font-semibold text-primary">{cell.tgtLabel}</span>
+                  {cell.normalized && (
+                    <span className="ml-1.5 text-amber-500 font-semibold">{t('mojibake.normalized')}</span>
+                  )}
                 </div>
                 <div className="font-mono text-sm text-green-400 font-semibold break-all">{cell.text}</div>
               </div>
@@ -217,11 +317,40 @@ export default function Mojibake() {
         </div>
       )}
 
-      {/* Full Matrix */}
-      {matrix && !loading && (
+      {/* HEX mode: flat results list */}
+      {hexMode && hexResults && !loading && (
         <details className="group" open={hits.length === 0}>
           <summary className="cursor-pointer text-sm font-semibold text-muted-foreground hover:text-foreground select-none mb-2">
-            {hits.length > 0 ? "查看完整矩阵 ▸" : "完整解码矩阵"}
+            {hits.length > 0 ? t('mojibake.viewAllHex') : t('mojibake.allHexResults')}
+          </summary>
+          <div className="rounded-xl border border-border overflow-hidden">
+            <table className="w-full text-xs border-collapse">
+              <thead>
+                <tr className="bg-muted/50 border-b border-border">
+                  <th className="px-3 py-2 text-left font-semibold text-foreground">{t('mojibake.targetEncoding')}</th>
+                  <th className="px-3 py-2 text-left font-semibold text-foreground">{t('mojibake.decodeResult')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {hexResults.map((r, i) => (
+                  <tr key={i} className={cn("border-b last:border-b-0 border-border/40", r.hit && "bg-green-500/10")}>
+                    <td className="px-3 py-2 font-semibold text-foreground/70 whitespace-nowrap">{r.tgtLabel}</td>
+                    <td className={cn("px-3 py-2 font-mono break-all", r.hit ? "text-green-400 font-semibold" : r.empty ? "text-muted-foreground/30" : "text-muted-foreground/50")}>
+                      {r.text}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </details>
+      )}
+
+      {/* Full Matrix (text mode) */}
+      {!hexMode && matrix && !loading && (
+        <details className="group" open={hits.length === 0}>
+          <summary className="cursor-pointer text-sm font-semibold text-muted-foreground hover:text-foreground select-none mb-2">
+            {hits.length > 0 ? t('mojibake.viewMatrix') : t('mojibake.fullMatrix')}
           </summary>
           <div className="overflow-x-auto rounded-xl border border-border">
             <table className="w-full text-xs border-collapse">
@@ -229,14 +358,14 @@ export default function Mojibake() {
                 <tr className="bg-muted/50 border-b border-border">
                   <th className="border-r border-border px-3 py-3 text-left min-w-[140px]">
                     <div className="text-[10px] leading-tight space-y-0.5">
-                      <div className="text-primary font-bold text-xs">↓ 假设乱码是这种编码</div>
-                      <div className="text-muted-foreground/50">（还原成字节）</div>
+                      <div className="text-primary font-bold text-xs">↓ {t('mojibake.matrixRowHeader')}</div>
+                      <div className="text-muted-foreground/50">{t('mojibake.matrixRowSub')}</div>
                     </div>
                   </th>
                   {TARGETS.map(tgt => (
                     <th key={tgt.id} className="border-r last:border-r-0 border-border/60 px-2 py-3 font-semibold text-center whitespace-nowrap text-foreground text-xs">
                       {tgt.label}
-                      <div className="text-[9px] text-muted-foreground/50 font-normal mt-0.5">→ 按此解读</div>
+                      <div className="text-[9px] text-muted-foreground/50 font-normal mt-0.5">→ {t('mojibake.matrixColSub')}</div>
                     </th>
                   ))}
                 </tr>
@@ -246,7 +375,7 @@ export default function Mojibake() {
                   <tr key={src.id} className="border-b last:border-b-0 border-border/40 hover:bg-muted/10">
                     <td className="border-r border-border px-3 py-2 bg-muted/20">
                       <div className="font-semibold text-foreground/80 text-xs">{src.label}</div>
-                      <div className="text-muted-foreground/50 text-[10px] mt-0.5 leading-tight">{src.tip}</div>
+                      <div className="text-muted-foreground/50 text-[10px] mt-0.5 leading-tight">{lang === "en" ? src.tip : src.tipZh}</div>
                     </td>
                     {matrix[ri].map((cell, ci) => (
                       <td key={ci} className={cn(
@@ -254,9 +383,14 @@ export default function Mojibake() {
                         cell.hit && "bg-green-500/15 border-green-500/30"
                       )}>
                         {cell.hit ? (
-                          <div className="font-mono text-green-400 dark:text-green-300 text-xs font-semibold max-w-[120px] truncate mx-auto cursor-pointer"
-                            title={`点击复制：${cell.text}`} onClick={() => handleCopy(cell.text)}>
-                            {cell.text}
+                          <div className="space-y-0.5">
+                            <div className="font-mono text-green-400 dark:text-green-300 text-xs font-semibold max-w-[120px] truncate mx-auto cursor-pointer"
+                              title={cell.text} onClick={() => handleCopy(cell.text)}>
+                              {cell.text}
+                            </div>
+                            {cell.normalized && (
+                              <div className="text-[9px] text-amber-500/80">{t('mojibake.normalized')}</div>
+                            )}
                           </div>
                         ) : cell.empty ? (
                           <span className="text-muted-foreground/25 text-[10px]">{cell.text}</span>
@@ -275,15 +409,21 @@ export default function Mojibake() {
         </details>
       )}
 
-      {!matrix && !loading && !input.trim() && (
+      {!matrix && !hexResults && !loading && !input.trim() && (
         <div className="rounded-xl border border-border/50 bg-muted/20 p-8 text-center text-sm text-muted-foreground">
           {t('mojibake.empty')}
         </div>
       )}
 
-      {matrix && !loading && hits.length === 0 && (
+      {!hexMode && matrix && !loading && hits.length === 0 && (
         <div className="rounded-lg border border-border/50 bg-muted/20 px-4 py-2.5 text-sm text-muted-foreground">
-          未在矩阵中检测到连续中/日/韩文字。可能原因：①文本非东亚语言 ②多次错误编码嵌套 ③编码不在当前矩阵范围内
+          {t('mojibake.noHits')}
+        </div>
+      )}
+
+      {hexMode && hexResults && !loading && hits.length === 0 && !hexError && (
+        <div className="rounded-lg border border-border/50 bg-muted/20 px-4 py-2.5 text-sm text-muted-foreground">
+          {t('mojibake.noHitsHex')}
         </div>
       )}
     </div>

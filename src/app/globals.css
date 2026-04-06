@@ -9,6 +9,12 @@
   }
 }
 
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

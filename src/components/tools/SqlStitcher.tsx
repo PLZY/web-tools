@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useTranslation } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,7 +26,8 @@ const NUM_TYPES = new Set([
 ]);
 
 function wrapValue(value: string, type: string): string {
-  if (value === "null" || value === "NULL" || value === "") return "NULL";
+  if (value === "null" || value === "NULL") return "NULL";
+  if (value === "") return "''";
   const t = type.toLowerCase();
   if (t === "null") return "NULL";
   if (t === "boolean") return value.toLowerCase() === "true" ? "1" : "0";
@@ -87,9 +88,9 @@ function parseMyBatisParams(raw: string): Param[] {
 
 // ─── Block Parsers ───────────────────────────────────────────────────────────
 
-type ParseResult = { block: SqlBlock; nextLine: number } | null;
+type ParseResult = { blocks: SqlBlock[]; nextLine: number } | null;
 
-/** MyBatis / MyBatis-Plus: ==>  Preparing: ... + ==> Parameters: ... */
+/** MyBatis / MyBatis-Plus: ==>  Preparing: ... + ==> Parameters: ... (batch-aware) */
 function tryMyBatis(lines: string[], start: number): ParseResult {
   const line = lines[start];
   const prepMatch = line.match(/=+>\s*Preparing:\s*([\s\S]*)/);
@@ -98,49 +99,73 @@ function tryMyBatis(lines: string[], start: number): ParseResult {
   let sql = prepMatch[1].trim();
   let i = start + 1;
 
-  // Collect multi-line SQL until Parameters line
+  // Collect multi-line SQL until Parameters line or new log entry
+  // Use full datetime pattern (date + time) to avoid breaking on SQL date literals like '2024-01-01'
   while (i < lines.length) {
     const l = lines[i].trim();
     if (/=+>\s*Parameters:/.test(l)) break;
-    if (/^(=+>|<==)/.test(l) || /^\d{4}-\d{2}-\d{2}/.test(l)) break;
+    if (/^(=+>|<==)/.test(l) || /^\d{4}-\d{2}-\d{2}[\sT]\d{2}:\d{2}/.test(l)) break;
     if (l) sql += " " + l;
     i++;
   }
 
-  // Parse parameters
-  const paramLine = lines[i]?.trim() ?? "";
-  const paramMatch = paramLine.match(/=+>\s*Parameters:\s*([\s\S]*)/);
-  const params = paramMatch ? parseMyBatisParams(paramMatch[1].trim()) : [];
-
-  // Skip <== lines
-  let next = i + 1;
-  while (next < lines.length && /^\s*<==/.test(lines[next])) next++;
-
   sql = sql.trim();
   const qCount = (sql.match(/\?/g) || []).length;
-  const warning = params.length > 0 && qCount !== params.length
-    ? `占位符(${qCount}) ≠ 参数(${params.length})` : undefined;
 
-  return { block: { format: "MyBatis", sql, params, rawSql: stitchSql(sql, params), warning }, nextLine: next };
+  // Collect ALL consecutive Parameters lines (supports MyBatis batch operations)
+  const batchParams: Param[][] = [];
+  while (i < lines.length) {
+    const paramLine = lines[i]?.trim() ?? "";
+    const paramMatch = paramLine.match(/=+>\s*Parameters:\s*([\s\S]*)/);
+    if (!paramMatch) break;
+    batchParams.push(parseMyBatisParams(paramMatch[1].trim()));
+    i++;
+  }
+  if (batchParams.length === 0) batchParams.push([]);
+
+  // Skip <== result lines
+  while (i < lines.length && /^\s*<==/.test(lines[i])) i++;
+
+  const blocks: SqlBlock[] = batchParams.map(params => {
+    const warning = params.length > 0 && qCount !== params.length
+      ? `⚠ ?(${qCount}) ≠ params(${params.length})` : undefined;
+    return { format: "MyBatis", sql, params, rawSql: stitchSql(sql, params), warning };
+  });
+
+  return { blocks, nextLine: i };
 }
 
-/** Hibernate: SQL + binding parameter lines */
+/** Hibernate: SQL + binding parameter lines
+ *  Handles both:
+ *  - "Hibernate: SELECT ..."  (classic format)
+ *  - "org.hibernate.SQL - SELECT ..."  (logger-prefixed, SQL same line)
+ *  - "org.hibernate.SQL - \n    SELECT ..."  (logger-prefixed, SQL on next lines)
+ */
 function tryHibernate(lines: string[], start: number): ParseResult {
-  const line = lines[start].trim();
-  const hibMatch = line.match(/^Hibernate:\s*([\s\S]*)/i);
-  if (!hibMatch) return null;
+  const line = lines[start];
 
-  let sql = hibMatch[1].trim();
+  let sql = "";
+  const hibColonIdx = line.search(/Hibernate:/i);
+  if (hibColonIdx !== -1) {
+    sql = line.slice(hibColonIdx + "Hibernate:".length).trim();
+  } else {
+    // org.hibernate.SQL - <sql>  OR  org.hibernate.SQL -\n<sql on next line>
+    const dashMatch = line.match(/\borg\.hibernate\.\S*SQL\s+-\s*(.*)/i);
+    if (!dashMatch) return null;
+    sql = dashMatch[1].trim();
+  }
+
   let i = start + 1;
 
-  // Collect multi-line SQL
+  // Collect multi-line SQL until binding parameter lines or new log entry
   while (i < lines.length) {
-    const l = lines[i].trim();
-    if (/binding parameter/i.test(l) || /binding parameter/i.test(lines[i])) break;
+    const raw = lines[i];
+    if (/binding parameter/i.test(raw)) break;
+    const l = raw.trim();
     if (!l) { i++; continue; }
-    if (/^\d{4}-\d{2}-\d{2}/.test(lines[i]) && /binding parameter/i.test(lines[i])) break;
-    if (/^\d{4}-\d{2}-\d{2}/.test(lines[i]) && !/binding parameter/i.test(lines[i])) break;
-    sql += " " + l;
+    // Full datetime pattern distinguishes new log entries from SQL date literals
+    if (/^\d{4}-\d{2}-\d{2}[\sT]\d{2}:\d{2}/.test(raw)) break;
+    sql += (sql ? " " : "") + l;
     i++;
   }
 
@@ -161,7 +186,7 @@ function tryHibernate(lines: string[], start: number): ParseResult {
 
   if (params.length === 0) return null;
   sql = sql.replace(/\s+/g, " ").trim();
-  return { block: { format: "Hibernate", sql, params, rawSql: stitchSql(sql, params) }, nextLine: i };
+  return { blocks: [{ format: "Hibernate", sql, params, rawSql: stitchSql(sql, params) }], nextLine: i };
 }
 
 /** Spring JDBC Named Params: Executing prepared SQL statement [...] + Setting SQL statement parameter */
@@ -208,7 +233,73 @@ function trySpringJdbc(lines: string[], start: number): ParseResult {
     return "?";
   });
 
-  return { block: { format: "Spring JDBC", sql, params: positionalParams, rawSql: stitchSql(positionalSql, positionalParams) }, nextLine: i };
+  return { blocks: [{ format: "Spring JDBC", sql, params: positionalParams, rawSql: stitchSql(positionalSql, positionalParams) }], nextLine: i };
+}
+
+/** Spring JDBC Named Param (NamedParameterJdbcTemplate):
+ *  Line 1: ...Executing prepared SQL query/update/statement...
+ *  Line 2: (SQL with :key placeholders)
+ *  Line 3: Parameters: {key1=value1, key2=value2}
+ */
+function trySpringNamedParam(lines: string[], start: number): ParseResult {
+  const line = lines[start];
+  // Distinguish from trySpringJdbc which handles SQL-in-brackets format
+  // This parser handles: trigger line → next line is bare SQL → Parameters: {k=v}
+  if (!/Executing prepared SQL (query|update)/i.test(line)) return null;
+
+  let i = start + 1;
+
+  // Skip empty lines, stop if we hit a new log entry
+  while (i < lines.length && !lines[i].trim()) i++;
+  if (i >= lines.length) return null;
+
+  // Collect SQL lines until Parameters: {...} or new log entry
+  let sql = "";
+  while (i < lines.length) {
+    const l = lines[i].trim();
+    if (/^Parameters:\s*\{/i.test(l)) break;
+    if (!l || /^\d{4}-\d{2}-\d{2}[\sT]\d{2}:\d{2}/.test(lines[i])) break;
+    sql += (sql ? " " : "") + l;
+    i++;
+  }
+  if (!sql || !/:(\w+)/.test(sql)) return null; // must contain at least one :key
+
+  // Parse Parameters: {key=value, ...}
+  const paramLine = lines[i]?.trim() ?? "";
+  const paramMatch = paramLine.match(/^Parameters:\s*(\{[\s\S]*\})\s*$/i);
+  if (!paramMatch) return null;
+  i++;
+
+  // Bracket-aware K-V split: handles values like [a, b] or nested {}
+  const inner = paramMatch[1].slice(1, paramMatch[1].lastIndexOf("}"));
+  const kvMap: Record<string, string> = {};
+  let pos = 0, depth = 0, keyStart = 0, eqPos = -1;
+  while (pos <= inner.length) {
+    const ch = inner[pos] ?? ","; // force-flush at end
+    if (ch === "[" || ch === "{") depth++;
+    else if (ch === "]" || ch === "}") depth--;
+    else if (ch === "=" && depth === 0 && eqPos === -1) eqPos = pos;
+    else if ((ch === "," && depth === 0) || pos === inner.length) {
+      if (eqPos >= 0) {
+        kvMap[inner.slice(keyStart, eqPos).trim()] = inner.slice(eqPos + 1, pos).trim();
+      }
+      keyStart = pos + 1; eqPos = -1;
+    }
+    pos++;
+  }
+
+  // Replace :key placeholders; collect params in SQL-occurrence order
+  const params: Param[] = [];
+  const rawSql = sql.replace(/:(\w+)/g, (full, key) => {
+    if (!(key in kvMap)) return full;
+    const val = kvMap[key];
+    if (val === "null" || val === "NULL") { params.push({ value: "null", type: "null" }); return "NULL"; }
+    if (/^-?\d+(\.\d+)?$/.test(val))     { params.push({ value: val, type: "Integer" }); return val; }
+    params.push({ value: val, type: "String" });
+    return `'${val.replace(/'/g, "''")}'`;
+  });
+
+  return { blocks: [{ format: "Spring Named Param", sql, params, rawSql: rawSql.replace(/\s+/g, " ").trim() }], nextLine: i };
 }
 
 /** MyBatis-Dynamic: Bound SQL: ... + Parameters: {key=val, ...} */
@@ -270,7 +361,7 @@ function tryMyBatisDynamic(lines: string[], start: number): ParseResult {
   }
 
   sql = sql.replace(/\s+/g, " ").trim();
-  return { block: { format: "MyBatis-Dynamic", sql, params, rawSql: stitchSql(sql, params) }, nextLine: i + 1 };
+  return { blocks: [{ format: "MyBatis-Dynamic", sql, params, rawSql: stitchSql(sql, params) }], nextLine: i + 1 };
 }
 
 // ─── Multi-block Log Parser ─────────────────────────────────────────────────
@@ -284,16 +375,20 @@ function parseLogBlocks(input: string): SqlBlock[] {
     const line = lines[i];
     // Try each parser in priority order
     const mybatis = /=+>\s*Preparing:/i.test(line) ? tryMyBatis(lines, i) : null;
-    if (mybatis) { blocks.push(mybatis.block); i = mybatis.nextLine; continue; }
+    if (mybatis) { blocks.push(...mybatis.blocks); i = mybatis.nextLine; continue; }
 
-    const hibernate = /^(?:\s*Hibernate:|\s*\d{4}.*Hibernate:)/i.test(line) ? tryHibernate(lines, i) : null;
-    if (hibernate) { blocks.push(hibernate.block); i = hibernate.nextLine; continue; }
+    // Match "Hibernate:" or "org.hibernate.*SQL" to handle both classic and logger-prefixed formats
+    const hibernate = /Hibernate:|org\.hibernate\.\S*SQL/i.test(line) ? tryHibernate(lines, i) : null;
+    if (hibernate) { blocks.push(...hibernate.blocks); i = hibernate.nextLine; continue; }
 
     const spring = /Executing prepared SQL statement/i.test(line) ? trySpringJdbc(lines, i) : null;
-    if (spring) { blocks.push(spring.block); i = spring.nextLine; continue; }
+    if (spring) { blocks.push(...spring.blocks); i = spring.nextLine; continue; }
+
+    const springNamed = /Executing prepared SQL (query|update)/i.test(line) ? trySpringNamedParam(lines, i) : null;
+    if (springNamed) { blocks.push(...springNamed.blocks); i = springNamed.nextLine; continue; }
 
     const dynamic = /Bound SQL:/i.test(line) ? tryMyBatisDynamic(lines, i) : null;
-    if (dynamic) { blocks.push(dynamic.block); i = dynamic.nextLine; continue; }
+    if (dynamic) { blocks.push(...dynamic.blocks); i = dynamic.nextLine; continue; }
 
     i++;
   }
@@ -304,17 +399,17 @@ function parseLogBlocks(input: string): SqlBlock[] {
 
 function formatSql(sql: string): string {
   let s = sql.replace(/\s+/g, " ").trim();
-  // Major keywords → new line
+  // Major keywords → new line (avoid lookbehind for Safari compatibility)
   const major = ["SELECT", "FROM", "WHERE", "SET", "VALUES", "INSERT INTO", "UPDATE", "DELETE FROM",
     "ORDER BY", "GROUP BY", "HAVING", "LIMIT", "OFFSET",
     "LEFT JOIN", "RIGHT JOIN", "INNER JOIN", "OUTER JOIN", "CROSS JOIN", "JOIN",
     "UNION ALL", "UNION", "INTERSECT", "EXCEPT"];
   for (const kw of major) {
-    const re = new RegExp(`(?<=\\s|^)(${kw.replace(/ /g, "\\s+")})\\b`, "gi");
-    s = s.replace(re, "\n$1");
+    const re = new RegExp(`(\\s|^)(${kw.replace(/ /g, "\\s+")})\\b`, "gi");
+    s = s.replace(re, "\n$2");
   }
   // Indent AND / OR / ON
-  s = s.replace(/(?<=\s)(AND|OR|ON)\b/gi, "\n    $1");
+  s = s.replace(/(\s)(AND|OR|ON)\b/gi, "\n    $2");
   return s.replace(/^\n+/, "").trim();
 }
 
@@ -347,7 +442,9 @@ export default function SqlStitcher() {
   const [input, setInput] = useState("");
   const [blocks, setBlocks] = useState<SqlBlock[]>([]);
   const [formatted, setFormatted] = useState(true);
+  const [copied, setCopied] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
     clearTimeout(debounceRef.current);
@@ -358,16 +455,34 @@ export default function SqlStitcher() {
     return () => clearTimeout(debounceRef.current);
   }, [input]);
 
-  const handleCopy = (sql: string) => {
-    navigator.clipboard.writeText(sql).then(() => toast.success(t("sqlStitcher.copied")));
-  };
+  // Build combined SQL string with -- #N [Format] separators
+  const combinedSql = useMemo(() => {
+    if (blocks.length === 0) return "";
+    return blocks.map((block, i) => {
+      const sql = formatted ? formatSql(block.rawSql) : compressSql(block.rawSql);
+      const header = block.warning
+        ? `-- #${i + 1} [${block.format}]  ⚠ ${block.warning}`
+        : `-- #${i + 1} [${block.format}]`;
+      return `${header}\n${sql}`;
+    }).join("\n\n");
+  }, [blocks, formatted]);
+
+  const handleCopyAll = useCallback(() => {
+    if (!combinedSql) return;
+    navigator.clipboard.writeText(combinedSql).then(() => {
+      setCopied(true);
+      toast.success(t("sqlStitcher.copied"));
+      clearTimeout(copyTimerRef.current);
+      copyTimerRef.current = setTimeout(() => setCopied(false), 2000);
+    });
+  }, [combinedSql, t]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4" style={{ minHeight: "calc(100vh - 250px)" }}>
       {/* Left: Input */}
       <div className="space-y-2 flex flex-col">
         <div className="flex items-center justify-between">
-          <label className="text-sm font-semibold text-muted-foreground">粘贴日志（支持混合多段）</label>
+          <label className="text-sm font-semibold text-muted-foreground">{t('sqlStitcher.inputLabel')}</label>
           {input && (
             <Button variant="ghost" size="sm" className="h-6 text-xs gap-1" onClick={() => setInput("")}>
               <Trash2 className="w-3 h-3" />{t("sqlStitcher.clear")}
@@ -377,11 +492,11 @@ export default function SqlStitcher() {
         <Textarea
           value={input}
           onChange={e => setInput(e.target.value)}
-          placeholder={"直接粘贴整段日志（MyBatis / Hibernate / Spring JDBC / MyBatis-Dynamic 均可自动识别）\n\n示例：\n==>  Preparing: SELECT * FROM user WHERE id = ?\n==> Parameters: 1(Integer)"}
+          placeholder={t('sqlStitcher.inputPlaceholder')}
           className="flex-1 min-h-[400px] font-mono text-xs resize-none"
         />
         {!input && (
-          <p className="text-xs text-muted-foreground/60">支持一次性粘贴包含多条 SQL 的完整日志，自动逐条识别并缝合</p>
+          <p className="text-xs text-muted-foreground/60">{t('sqlStitcher.inputHint')}</p>
         )}
       </div>
 
@@ -393,20 +508,27 @@ export default function SqlStitcher() {
             {blocks.length > 0 && <span className="text-primary ml-1.5">({blocks.length} 条)</span>}
           </label>
           {blocks.length > 0 && (
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
               <Button size="sm" variant={formatted ? "default" : "outline"} className="h-6 text-xs gap-1"
                 onClick={() => setFormatted(true)}>
-                <AlignLeft className="w-3 h-3" />格式化
+                <AlignLeft className="w-3 h-3" />{t('sqlStitcher.format')}
               </Button>
               <Button size="sm" variant={!formatted ? "default" : "outline"} className="h-6 text-xs gap-1"
                 onClick={() => setFormatted(false)}>
-                <WrapText className="w-3 h-3" />压缩
+                <WrapText className="w-3 h-3" />{t('sqlStitcher.compress')}
+              </Button>
+              <Button size="sm"
+                variant={copied ? "default" : "outline"}
+                className={cn("h-6 text-xs gap-1 transition-all", copied && "bg-green-600 border-green-600 text-white")}
+                onClick={handleCopyAll}>
+                <Copy className="w-3 h-3" />
+                {copied ? (t("sqlStitcher.copied") ?? "已复制 ✓") : (t("sqlStitcher.copy") ?? "复制全部")}
               </Button>
             </div>
           )}
         </div>
 
-        <div className="flex-1 min-h-[400px] overflow-y-auto space-y-3">
+        <div className="flex-1 min-h-[400px]">
           {blocks.length === 0 && !input.trim() && (
             <div className="rounded-xl border border-border/50 bg-muted/20 h-full flex items-center justify-center text-sm text-muted-foreground">
               {t("sqlStitcher.outputPlaceholder")}
@@ -414,40 +536,16 @@ export default function SqlStitcher() {
           )}
           {blocks.length === 0 && input.trim() && (
             <div className="rounded-xl border border-border/50 bg-muted/20 h-full flex items-center justify-center text-sm text-muted-foreground">
-              未能识别出 SQL 日志，请检查格式
+              {t('sqlStitcher.noMatch')}
             </div>
           )}
-
-          {blocks.map((block, i) => {
-            const displaySql = formatted ? formatSql(block.rawSql) : compressSql(block.rawSql);
-            return (
-              <div key={i} className="rounded-xl border border-border overflow-hidden">
-                {/* Block header */}
-                <div className="flex items-center justify-between px-3 py-1.5 bg-muted/40 border-b border-border">
-                  <span className="text-xs">
-                    <span className="font-semibold text-primary">{block.format}</span>
-                    <span className="text-muted-foreground/60 ml-2">#{i + 1}</span>
-                  </span>
-                  <Button size="sm" variant="ghost" className="h-6 text-xs gap-1"
-                    onClick={() => handleCopy(displaySql)}>
-                    <Copy className="w-3 h-3" />{t("sqlStitcher.copy")}
-                  </Button>
-                </div>
-
-                {/* Warning */}
-                {block.warning && (
-                  <div className="px-3 py-1.5 text-xs text-orange-400 bg-orange-500/10 border-b border-border">
-                    ⚠ {block.warning}
-                  </div>
-                )}
-
-                {/* SQL body */}
-                <pre className="px-3 py-2 text-xs font-mono leading-relaxed whitespace-pre-wrap break-all bg-card overflow-x-auto">
-                  <HighlightedSQL sql={displaySql} />
-                </pre>
-              </div>
-            );
-          })}
+          {blocks.length > 0 && (
+            <div className="rounded-xl border border-border overflow-hidden h-full flex flex-col">
+              <pre className="flex-1 px-3 py-3 text-xs font-mono leading-relaxed whitespace-pre-wrap break-all bg-card overflow-y-auto min-h-[400px]">
+                <HighlightedSQL sql={combinedSql} />
+              </pre>
+            </div>
+          )}
         </div>
       </div>
     </div>

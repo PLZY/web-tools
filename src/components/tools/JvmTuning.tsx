@@ -216,13 +216,16 @@ export default function JvmTuning() {
     } else if (effectiveGc === "Parallel") {
       addArg("gc", "-XX:+", "UseParallelGC", "Enable Parallel GC", "useparallelgc", isGcSpecial);
     } else {
-      addArg("gc", "-XX:+", "UseG1GC", "Enable G1 GC", "useg1gc", isGcSpecial);
+      // JDK 9+ defaults to G1GC; only explicit for JDK 8
+      if (jdkVersion === "8") addArg("gc", "-XX:+", "UseG1GC", "Enable G1 GC", "useg1gc", isGcSpecial);
       let pauseTime = 200;
       let isPauseSpecial = false;
       if (appType === "microservice") {
         pauseTime = 50;
         isPauseSpecial = true;
-        addArg("gc", "-XX:", "G1HeapRegionSize=16m", "Reduce G1 fragmentation", "g1heapregionsize", true);
+        // Region size should match heap: 1MB per ~1GB heap, min 1m, max 32m, power of 2
+        const regionSizeMb = Math.min(32, Math.max(1, Math.pow(2, Math.round(Math.log2(heapSize / 2048)))));
+        addArg("gc", "-XX:", `G1HeapRegionSize=${regionSizeMb}m`, "Tune G1 region size for heap", "g1heapregionsize", true);
       }
       addArg("gc", "-XX:", `MaxGCPauseMillis=${pauseTime}`, "Set target GC pause", "maxgcpausemillis", isPauseSpecial);
       addArg("gc", "-XX:", "InitiatingHeapOccupancyPercent=45", "G1 IHOP threshold", "ihop");
@@ -236,7 +239,8 @@ export default function JvmTuning() {
     if (appType !== "batch") addArg("perf", "-XX:+", "AlwaysPreTouch", "Pre-touch memory pages", "alwayspretouch");
     if (jdkVersion === "8" || jdkVersion === "11") addArg("perf", "-XX:-", "UseBiasedLocking", "Disable biased locking", "usebiasedlocking");
     addArg("perf", "-XX:+", "TieredCompilation", "Enable tiered compilation", "tieredcompilation");
-    if (memorySize >= 4) addArg("perf", "-XX:+", "UseStringDeduplication", "Enable string deduplication", "usestringdeduplication");
+    // String deduplication is a G1-only feature
+    if (memorySize >= 4 && effectiveGc === "G1") addArg("perf", "-XX:+", "UseStringDeduplication", "Enable string deduplication", "usestringdeduplication");
 
     // 4. Stability
     addArg("stability", "-XX:+", "ExitOnOutOfMemoryError", "Exit immediately on OOM", "exitonoutofmemoryerror");

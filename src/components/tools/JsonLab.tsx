@@ -98,6 +98,10 @@ export default function JsonLab() {
     isMinifiedRef.current = isMinified;
   }, [isMinified]);
 
+  // Parsed data version counter — bumped every time parsedRef.current changes,
+  // so useMemo hooks that depend on the parsed object re-compute correctly.
+  const [parsedVersion, setParsedVersion] = useState(0);
+
   // 树搜索 & 路径
   const [filterText, setFilterText] = useState<string>("");
   const [jsonPath, setJsonPath] = useState<string>("$");
@@ -129,6 +133,7 @@ export default function JsonLab() {
     debounce((value: string) => {
       if (!value.trim()) {
         parsedRef.current = null;
+        setParsedVersion(v => v + 1);
         setFormattedJson("");
         setJsonError(null);
         setIsRepaired(false);
@@ -148,6 +153,7 @@ export default function JsonLab() {
       try {
         const parsed = JSON.parse(processedInput);
         parsedRef.current = parsed;
+        setParsedVersion(v => v + 1);
         setFormattedJson(isMinifiedRef.current ? JSON.stringify(parsed) : formatJson(parsed));
         setJsonError(null);
         setIsRepaired(false);
@@ -157,12 +163,14 @@ export default function JsonLab() {
           if (repaired !== processedInput) repairAttempted = true;
           const parsed = JSON.parse(repaired);
           parsedRef.current = parsed;
+          setParsedVersion(v => v + 1);
           setFormattedJson(isMinifiedRef.current ? JSON.stringify(parsed) : formatJson(parsed));
           setJsonError(null);
           setIsRepaired(repairAttempted);
         } catch (repairError: any) {
           const loc = getErrorLocation(processedInput, repairError.message);
           parsedRef.current = null;
+          setParsedVersion(v => v + 1);
           setFormattedJson(isMinifiedRef.current ? minifyJson(processedInput) : processedInput);
           setJsonError(loc);
           setIsRepaired(false);
@@ -210,6 +218,7 @@ export default function JsonLab() {
           ? JSON.parse(curlParsed.body) 
           : curlParsed.body;
         parsedRef.current = bodyJson;
+        setParsedVersion(v => v + 1);
         setFormattedJson(formatJson(bodyJson));
         setJsonError(null);
         setIsRepaired(false);
@@ -252,10 +261,10 @@ export default function JsonLab() {
   // ── 驼峰 ↔ 下划线 自动转换 ─────────────────────────────────────────────
 
   const hasSnakeCase = useCallback((obj: any): boolean => {
-    if (typeof obj === "string") return obj.includes("_") && /^[a-z]+_[a-z]+$/.test(obj);
+    if (typeof obj === "string") return obj.includes("_") && /^[a-z][a-z0-9]*_[a-z0-9]+/.test(obj);
     if (Array.isArray(obj)) return obj.some(hasSnakeCase);
     if (typeof obj === "object" && obj !== null) {
-      return Object.keys(obj).some(k => /^[a-z]+_[a-z]+$/.test(k)) || Object.values(obj).some(hasSnakeCase);
+      return Object.keys(obj).some(k => /^[a-z][a-z0-9]*_[a-z0-9]+/.test(k)) || Object.values(obj).some(hasSnakeCase);
     }
     return false;
   }, []);
@@ -275,13 +284,14 @@ export default function JsonLab() {
     const isCamel = hasCamelCase(parsedRef.current);
     
     let converted: any;
-    if (isSnake) {
-      converted = snakeToCamelKeys(parsedRef.current);
-    } else if (isCamel) {
+    if (isCamel) {
       converted = camelToSnakeKeys(parsedRef.current);
+    } else if (isSnake) {
+      converted = snakeToCamelKeys(parsedRef.current);
     } else {
       return;
     }
+    parsedRef.current = converted; // sync update — don't wait for 300ms debounce
     setEditorValue(jsonEditorRef, formatJson(converted), setJsonInput);
   }, [hasSnakeCase, hasCamelCase, setEditorValue]);
 
@@ -305,6 +315,7 @@ export default function JsonLab() {
     setCurlParsed(null);
     setCurlError(null);
     parsedRef.current = null;
+    setParsedVersion(v => v + 1);
     setFilterText("");
     setJsonPath("$");
     setIsRepaired(false);
@@ -335,7 +346,8 @@ export default function JsonLab() {
       return undefined;
     };
     return filter(parsedRef.current);
-  }, [filterText, parsedRef.current]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterText, parsedVersion]);
 
   // ── 转换结果 ──────────────────────────────────────────────────────────
 
@@ -350,7 +362,8 @@ export default function JsonLab() {
       case "protobuf":   return generateProtobuf(parsedRef.current);
       default:           return "";
     }
-  }, [parsedRef.current, transformTarget]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [parsedVersion, transformTarget]);
 
   const transformLang = useMemo(() => {
     switch (transformTarget) {

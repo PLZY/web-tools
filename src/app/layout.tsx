@@ -12,10 +12,10 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   metadataBase: new URL('https://dogupup.com'),
   title: {
-    default: "DogUp DevTools | Free Online Developer Toolkit & Life Utilities | 免费在线开发者工具箱",
+    default: "免费在线开发者工具箱 | DogUp DevTools - Free Online Developer Toolkit & Life Utilities",
     template: "%s",
   },
-  description: "DogUp DevTools — free, privacy-first online toolkit for developers and everyday life. Maven dependency analyzer, Cron parser, JSON formatter, JVM tuning, log config generator, text diff, SQL stitcher, cURL builder, MBTI test, and more. All tools run in your browser with zero data uploaded. DogUp DevTools — 免费、隐私优先的在线工具箱，提供Maven依赖分析、Cron解析、JSON格式化、JVM调优、日志配置、文本对比、SQL拼接、cURL构建、MBTI测试等工具，所有数据在浏览器中处理，不上传任何数据。",
+  description: "DogUp DevTools — 免费、隐私优先的在线工具箱，提供Maven依赖分析、Cron解析、JSON格式化、JVM调优、日志配置、文本对比、SQL拼接、cURL构建、MBTI测试等工具，所有数据在浏览器中处理，不上传任何数据。Free, privacy-first online toolkit for developers and everyday life. All tools run in your browser with zero data uploaded.",
   keywords: [
     "DogUp DevTools", "Online Developer Tools", "在线开发者工具", "Free Online Toolkit", "免费在线工具箱",
     "Maven Dependency Analysis", "Maven依赖分析", "Cron Expression Parser", "Cron表达式解析",
@@ -26,8 +26,8 @@ export const metadata: Metadata = {
     "Text Formatter", "文本格式化", "Privacy First Developer Tools", "隐私优先开发工具"
   ],
   openGraph: {
-    title: "DogUp DevTools | Free Online Developer Toolkit & Life Utilities",
-    description: "Free, privacy-first online toolkit for developers. Maven analyzer, Cron parser, JSON formatter, JVM tuning, MBTI test, and more. All tools run in your browser.",
+    title: "免费在线开发者工具箱 | DogUp DevTools",
+    description: "免费、隐私优先的在线工具箱，提供Maven依赖分析、Cron解析、JSON格式化、JVM调优等10+工具，所有数据在浏览器中处理。",
     url: "https://dogupup.com",
     siteName: "DogUp DevTools",
     images: [
@@ -44,8 +44,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "DogUp DevTools | Free Online Developer Toolkit",
-    description: "Free, privacy-first online toolkit for developers. Maven analyzer, Cron parser, JSON formatter, JVM tuning, and more.",
+    title: "免费在线开发者工具箱 | DogUp DevTools",
+    description: "免费、隐私优先的在线工具箱，所有工具在浏览器中运行，不上传任何数据。",
     images: ["/opengraph-image"],
   },
 };
@@ -56,7 +56,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="zh-CN" suppressHydrationWarning>
       <head>
         <link rel="icon" href="/dog.svg" type="image/svg+xml" />
         <meta name="google-adsense-account" content="ca-pub-8178726174601950" />

@@ -3,8 +3,8 @@ import HomeClient from './HomeClient';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://dogupup.com'),
-  title: 'DogUp DevTools | Free Online Toolkit for Developers & Life | 免费在线工具箱',
-  description: 'DogUp DevTools — 免费、隐私优先的在线工具箱。开发者工具：Maven依赖分析、Cron表达式解析、JSON格式化、JVM调优、日志配置生成、文本对比、SQL参数拼接、cURL命令构建、乱码修复、IDE快捷键对照。生活工具：MBTI人格测试、时薪计算器。所有工具在浏览器中运行，不上传任何数据。DogUp DevTools — free, privacy-first online toolkit. Dev tools: Maven analyzer, Cron parser, JSON formatter, JVM tuning, log config, text diff, SQL stitcher, cURL builder, mojibake fixer. Life tools: MBTI test, hourly wage calculator.',
+  title: '免费在线工具箱 | DogUp DevTools - Free Online Toolkit for Developers & Life',
+  description: 'DogUp DevTools — 免费、隐私优先的在线工具箱。开发者工具：Maven依赖分析、Cron表达式解析、JSON格式化、JVM调优、日志配置生成、文本对比、SQL参数拼接、cURL命令构建、乱码修复、IDE快捷键对照。生活工具：MBTI人格测试、时薪计算器。所有工具在浏览器中运行，不上传任何数据。Free, privacy-first online toolkit for developers. All tools run in your browser with zero data uploaded.',
   keywords: [
     'DogUp DevTools', 'Online Developer Tools', '在线开发者工具', 'Free Online Toolkit', '免费在线工具箱',
     'Maven Dependency Analysis', 'Maven依赖分析', 'Maven Dependency Tree', 'Maven依赖树',
@@ -23,9 +23,16 @@ export const metadata: Metadata = {
     'Fake Update', '假装更新', '摸鱼神器',
     'Privacy First', '隐私优先', 'Browser Only Tools', '纯浏览器工具'
   ],
+  alternates: {
+    canonical: 'https://dogupup.com',
+    languages: {
+      'zh-CN': 'https://dogupup.com',
+      'en': 'https://dogupup.com',
+    },
+  },
   openGraph: {
-    title: 'DogUp DevTools | Free Online Toolkit | 免费在线工具箱',
-    description: 'Free, privacy-first online toolkit for developers and life. Maven analyzer, Cron parser, JSON formatter, JVM tuning, MBTI test, and 10+ more tools. All run in your browser.',
+    title: '免费在线工具箱 | DogUp DevTools',
+    description: '免费、隐私优先的在线工具箱，提供Maven依赖分析、Cron解析、JSON格式化、JVM调优、MBTI测试等10+工具，所有数据在浏览器中处理。',
     images: ['/opengraph-image'],
     locale: 'zh_CN',
     alternateLocale: ['en_US'],

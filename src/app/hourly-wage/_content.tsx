@@ -39,6 +39,10 @@ export default function HourlyWagePageContent() {
           <h2 className="text-lg font-bold text-foreground mb-2">{t("hourlyWage.seo.why")}</h2>
           <p className="leading-relaxed">{t("hourlyWage.seo.why.body")}</p>
         </div>
+        <div>
+          <h2 className="text-lg font-bold text-foreground mb-2">{t("seo.hourlyWage.howto")}</h2>
+          <p className="leading-relaxed">{t("seo.hourlyWage.howto.body")}</p>
+        </div>
       </div>
     </div>
   );

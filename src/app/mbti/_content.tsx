@@ -2,11 +2,11 @@
 
 import MbtiTest from "@/components/tools/MbtiTest";
 import { useTranslation } from "@/lib/i18n";
-import { ShieldCheck, Zap, HelpCircle, Heart, Shield, RefreshCw } from "lucide-react";
+import { ShieldCheck, Zap, HelpCircle, Heart, Shield, RefreshCw, BookOpen } from "lucide-react";
 
 
 export default function MbtiPageContent() {
-  const { lang } = useTranslation();
+  const { lang, t } = useTranslation();
   const zh = lang !== "en";
 
   return (
@@ -96,6 +96,14 @@ export default function MbtiPageContent() {
                 ? "性格会随着生活阅历和环境的变化而微调。我们建议在经历重大生活转变（如换工作、毕业或长期生活状态改变）后，每隔 6-12 个月重新测试一次。"
                 : "Personality adjusts with life experience and environment changes. We recommend retaking the test every 6-12 months, especially after major life changes like job transitions or graduation."}
             </p>
+          </div>
+
+          <div className="bg-card rounded-2xl p-7 sm:p-8 border border-border">
+            <h3 className="text-xl font-bold mb-4 flex items-center">
+              <BookOpen className="w-5 h-5 mr-3 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+              {t('seo.mbti.howto')}
+            </h3>
+            <p className="text-muted-foreground leading-relaxed">{t('seo.mbti.howto.body')}</p>
           </div>
         </div>
       </section>

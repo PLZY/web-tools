@@ -1,17 +1,9 @@
 "use client";
 
 import { useTranslation } from "@/lib/i18n";
-import { useEffect, useState } from "react";
 
 export default function TermsPageContent() {
   const { lang } = useTranslation();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) return null;
 
   return (
     <div className="container mx-auto px-4 py-12 max-w-4xl prose prose-neutral dark:prose-invert">

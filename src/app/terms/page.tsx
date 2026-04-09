@@ -2,11 +2,18 @@ import { Metadata } from 'next';
 import TermsPageContent from './_content';
 
 export const metadata: Metadata = {
-  title: 'Terms of Service | 服务条款 - DogUp DevTools',
-  description: 'DogUp DevTools terms of service. Free online developer tools and life utilities provided as-is for personal, educational, and commercial use. DogUp DevTools服务条款，免费在线工具供个人、教育和商业用途使用。',
+  title: '服务条款 | Terms of Service - DogUp DevTools',
+  description: 'DogUp DevTools服务条款，免费在线工具供个人、教育和商业用途使用。Free online developer tools provided as-is for personal, educational, and commercial use.',
+  alternates: {
+    canonical: 'https://dogupup.com/terms',
+    languages: {
+      'zh-CN': 'https://dogupup.com/terms',
+      'en': 'https://dogupup.com/terms',
+    },
+  },
   openGraph: {
-    title: 'Terms of Service | 服务条款 - DogUp DevTools',
-    description: 'Terms of service for DogUp DevTools free online tools.',
+    title: '服务条款 | Terms of Service - DogUp DevTools',
+    description: 'DogUp DevTools服务条款，免费在线工具供个人、教育和商业用途使用。',
     url: 'https://dogupup.com/terms',
     type: 'website',
   },

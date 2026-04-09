@@ -1,10 +1,10 @@
 export const en = {
   // Navbar & Common
   'nav.home': 'Home',
-  'nav.maven': 'Maven Tree',
+  'nav.maven': 'Maven Conflicts',
   'nav.cron': 'Cron Express',
   'nav.logback': 'Log Config',
-  'nav.jsonLab': 'JSON Lab',
+  'nav.jsonLab': 'JSON Formatter',
   'nav.jvm': 'JVM Tuning',
   'nav.hourlyWage': 'Wage Calc',
   'common.clear': 'Clear',
@@ -27,13 +27,13 @@ export const en = {
   'home.seo.description': 'Free online tools for developers and everyday use: JSON formatter, Cron translator, Maven dependency analyzer, JVM tuning, log config generator, text tools, hourly wage calculator, MBTI test, and more.',
   'home.seo.keywords': 'online tools, JSON formatter, Cron expression, Maven dependency, JVM tuning, log config, text tools, hourly wage calculator, MBTI test, developer tools, DogUp',
   'home.subtitle': 'Simple tools that just work — for devs and everyone else.',
-  'home.maven.title': 'Maven Tree',
+  'home.maven.title': 'Maven Conflict Detector',
   'home.maven.desc': 'Visual dependency analysis. Supports full path resolution for mvn dependency:tree to quickly locate version conflicts.',
   'home.cron.title': 'Cron Express',
   'home.cron.desc': 'Visualize Cron expressions. Intuitive execution timeline supporting Spring and Quartz features.',
   'home.logback.title': 'Log Config',
   'home.logback.desc': 'Interactive form to generate XML config, saving you from manual XML writing.',
-  'home.jsonLab.title': 'JSON Lab',
+  'home.jsonLab.title': 'JSON Formatter',
   'home.jsonLab.desc': 'Format, validate, and explore JSON structures. Supports multi-language code generation and path extraction.',
   'home.jvm.title': 'JVM Tuning',
   'home.jvm.desc': 'Best practices for startup params. Built-in templates for various memory environments.',
@@ -42,13 +42,13 @@ export const en = {
   'home.core': 'CORE',
   'home.privacy.title': 'Privacy',
   'home.privacy.desc': 'Security Statement: All parsing logic is executed in the client browser. No source code or DDL data is uploaded.',
-  'home.intent.title': 'Background',
-  'home.intent.desc': 'Born from the frustration of complex dependencies and repetitive modeling in daily development.',
-  'home.seo.text': 'DogUp Toolbox is a free online toolkit for developers and everyday users. Our developer tools cover the full stack: Maven dependency visualization for resolving Jar conflicts, Cron expression translator with next-execution preview, production-grade Logback/Log4j2 config generator, JVM startup parameter tuning by hardware spec, JSON formatter with code generation, cURL command builder, text processing, and more. Beyond dev tools, we also offer life tools: a real hourly wage calculator that accounts for taxes, commute, and hidden costs, a full MBTI personality test, and a fake system update screen. All tools run entirely in your browser — no data is uploaded, no account required.',
+  'home.intent.title': 'Why This Site?',
+  'home.intent.desc': 'We all run into small tasks every day — formatting JSON, checking a Cron schedule, calculating real hourly pay, fixing garbled text. Searching for a different tool each time is annoying. This site brings them all together: open your browser, get things done — no installs, no sign-ups.',
+  'home.seo.text': 'DogUp Toolbox is a free online toolkit for developers and everyday users. Developer tools include: JSON formatter with code generation, Cron expression translator with next-execution preview, Maven dependency visualization and conflict detection, JVM startup parameter tuning, production-grade Logback/Log4j2 config generator, cURL command builder, SQL stitcher, text processing and encoding conversion, Mojibake fixer, IDE shortcut comparison, and more. Life tools include: a real hourly wage calculator that factors in commute, meals, and hidden costs, a full 93-question MBTI personality test, and a fake system update screen for taking a break. All tools run entirely in your browser — no data is uploaded, no account required.',
   'home.notes.title': 'Dev Notes',
 
   // Maven Tool
-  'maven.title': 'Maven Tree (Dependency Analyzer)',
+  'maven.title': 'Maven Dependency Conflict Detector',
   'maven.desc': 'Visualize mvn dependency:tree output to quickly locate Jar conflicts.',
   'maven.input.title': 'Maven Output',
   'maven.input.placeholder': "Paste 'mvn dependency:tree' output here...",
@@ -429,7 +429,7 @@ export const en = {
   'jsonLab.tree.items': 'items',
   'jsonLab.tree.empty': 'No JSON data or invalid format.',
   // 补全缺失词条（不与上方重复）
-  'jsonLab.title': 'JSON Lab',
+  'jsonLab.title': 'JSON Formatter',
   'jsonLab.desc': 'Interactive JSON parsing, formatting, and multi-language code generation.',
   'jsonLab.input.title': 'JSON Input',
   'jsonLab.cockpit.clear': 'Clear',
@@ -602,8 +602,8 @@ export const en = {
   'diff.tooLarge': 'Text exceeds 5,000 lines. Please reduce the content to avoid browser freezing.',
 
   // Mojibake Forensics
-  'nav.mojibake': 'Encoding Detector',
-  'mojibake.title': 'Mojibake Forensics',
+  'nav.mojibake': 'Mojibake Fixer',
+  'mojibake.title': 'Mojibake Fixer',
   'mojibake.desc': 'No need to know the original encoding — brute-force cross-decode matrix instantly finds the correct human language from garbled text.',
   'mojibake.inputLabel': 'Paste garbled text',
   'mojibake.inputPlaceholder': 'Paste garbled text, e.g.: ä½ å¥½ or ÄãºÃ...',
@@ -638,8 +638,8 @@ export const en = {
   'mojibake.noHitsHex': 'No consecutive CJK characters detected with any encoding. Please verify the byte sequence.',
 
   // SQL Bind Stitcher
-  'nav.sqlStitcher': 'SQL Restorer',
-  'sqlStitcher.title': 'ORM SQL Bind Stitcher',
+  'nav.sqlStitcher': 'SQL Stitcher',
+  'sqlStitcher.title': 'SQL Parameter Stitcher',
   'sqlStitcher.desc': 'Stitch the SQL template (with ?) and parameter logs together to generate immediately runnable Raw SQL.',
   'sqlStitcher.sqlLabel': 'SQL Template',
   'sqlStitcher.sqlPlaceholder': 'Paste the Hibernate / MyBatis SQL with ? placeholders...',
@@ -700,9 +700,9 @@ export const en = {
   'home.ideShortcuts.desc': 'Eclipse / IDEA / VS Code side-by-side shortcut reference. Switch IDEs without the headache.',
   'home.diff.title': 'Text Diff',
   'home.diff.desc': 'Side-by-side text comparison with character-level diff highlighting.',
-  'home.mojibake.title': 'Encoding Detector',
+  'home.mojibake.title': 'Mojibake Fixer',
   'home.mojibake.desc': 'Tries multiple encoding combinations automatically to identify the correct encoding and recover readable text.',
-  'home.sqlStitcher.title': 'SQL Restorer',
+  'home.sqlStitcher.title': 'SQL Stitcher',
   'home.sqlStitcher.desc': 'Combine ORM-printed placeholders with parameter values to produce a runnable SQL statement.',
   'home.hourlyWage.title': 'Real Hourly Wage',
   'home.hourlyWage.desc': 'Bust the "high salary" illusion. Quantify every hidden cost of employment and find your true net purchasing power per hour.',
@@ -842,6 +842,34 @@ export const en = {
   'hourlyWage.exchange.hours': 'hours',
   'hourlyWage.exchange.days': 'days',
   'hourlyWage.unit.wan': 'W',
+
+  // JSON Lab SEO
+  'seo.json.what': 'Why use an online JSON formatter?',
+  'seo.json.what.body': 'JSON (JavaScript Object Notation) is the dominant data interchange format for REST APIs, configuration files, NoSQL databases, and message queues. In daily development, you constantly deal with minified API responses, deeply nested config blobs, and log payloads that are impossible to read without formatting. An online JSON formatter lets you paste raw JSON, instantly pretty-print it with proper indentation, and visually navigate the tree structure — all without installing any software. This tool goes further: it supports lenient parsing (JSON5, JSONC with comments and trailing commas), so you can paste real-world "almost-JSON" and still get a clean result. The built-in code generator converts your JSON structure into ready-to-use data classes for Java, TypeScript, Go, Python, Kotlin, and more — saving hours of boilerplate typing. Path extraction lets you click any node to get its JSONPath or dot-notation path, which is invaluable when writing extraction logic for tools like jq, Jackson, or Gson. All processing runs 100% in your browser — your API keys, tokens, and production data never leave your machine.',
+
+  // Text Format SEO
+  'seo.textformat.what': 'Common text processing scenarios',
+  'seo.textformat.what.body': 'Text transformation is one of the most frequent micro-tasks in software development, yet it is surprisingly annoying to do by hand. Need to convert a block of SQL column names to UPPER_CASE for a DDL migration? Want to Base64-encode a JSON payload before pasting it into a JWT debugger? Have a CSV with duplicate rows that need deduplication before import? These are the kinds of 10-second tasks that break your flow if you have to open a terminal, remember the right command, and pipe the output. This tool bundles the most common text operations — case conversion (UPPER, lower, Title Case, camelCase, snake_case), encoding/decoding (Base64, URL percent-encoding), sorting, deduplication, blank-line removal, line numbering, and prefix/suffix addition — into a single interface with instant preview. All processing runs locally in your browser, so you can safely paste text containing credentials, API keys, or internal data without worrying about leakage.',
+
+  // cURL Builder SEO
+  'seo.curl.what': 'Why use a visual cURL builder?',
+  'seo.curl.what.body': 'cURL is the universal command-line tool for making HTTP requests, used by millions of developers every day to test APIs, debug webhooks, and automate workflows. But hand-crafting a cURL command with the right quoting, header formatting, and body encoding is surprisingly error-prone — especially when you need to handle authentication tokens, multipart file uploads, or switch between macOS/Linux shell and Windows CMD/PowerShell syntax. A visual cURL builder lets you fill in the method, URL, headers, cookies, auth, and body through a structured form, and generates a properly escaped, copy-paste-ready command for your target platform. This tool also works in reverse: paste any cURL command and it will be parsed back into the form fields for editing. Whether you are exploring a new API, sharing a reproducible request with a teammate, or converting a Postman request to cURL, this builder saves you from quoting nightmares. Everything runs in your browser with no data uploaded.',
+  'faq.curl.q1': 'What platforms are supported?',
+  'faq.curl.a1': 'The tool generates correctly quoted commands for three targets: macOS/Linux (Bash), Windows CMD, and PowerShell. Each platform has different quoting and escaping rules, which the tool handles automatically.',
+  'faq.curl.q2': 'Can I parse an existing cURL command?',
+  'faq.curl.a2': 'Yes. Paste any cURL command into the parse input area and click Parse. The tool will extract the method, URL, headers, body, and options back into the form for editing.',
+  'faq.curl.q3': 'Does this tool send actual HTTP requests?',
+  'faq.curl.a3': 'No. This tool only generates the cURL command text. It does not execute any network requests. You copy the generated command and run it in your own terminal.',
+
+  // Fake Update SEO
+  'seo.fakeUpdate.what': 'How does the fake update screen work?',
+  'seo.fakeUpdate.what.body': 'The Fake System Update tool renders a pixel-perfect, full-screen simulation of an operating system update screen. Choose between Windows Update (the classic blue screen with a spinning circle) or macOS Update (the black screen with the Apple logo and progress bar). Once activated, the progress bar follows a carefully designed timeline: it quickly ramps up to around 27%, then gets stuck there for a full ten minutes, slowly crawls up with random pauses, and eventually freezes permanently at 89% — mimicking the behavior of a real update that seems to take forever. Press ESC twice quickly to exit at any time. The simulation runs entirely in your browser as a CSS/JS animation with no network requests. Common uses include: taking a well-deserved screen break at work, pranking colleagues, creating realistic screenshots for presentations or tutorials, or simply enjoying the irony of a fake update that is more reliable than the real thing.',
+  'faq.fakeUpdate.q1': 'How do I exit the fake update screen?',
+  'faq.fakeUpdate.a1': 'Press ESC twice quickly (within 500ms) to exit. This two-press design prevents accidental exits from a single keypress.',
+  'faq.fakeUpdate.q2': 'Which operating systems are supported?',
+  'faq.fakeUpdate.a2': 'Currently Windows Update and macOS Update styles are available. Each style is carefully designed to match the real update screen as closely as possible.',
+  'faq.fakeUpdate.q3': 'Does it use any network resources?',
+  'faq.fakeUpdate.a3': 'No. The entire simulation is a local CSS/JS animation. No data is downloaded or uploaded. It works perfectly offline.',
 
   // Tool SEO descriptions
   'seo.cron.what': 'Which Cron formats are supported?',

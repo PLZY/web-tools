@@ -1,28 +1,33 @@
-"use client";
+import { Metadata } from 'next';
+import MojibakePageContent from './_content';
 
-import Mojibake from "@/components/tools/Mojibake";
-import { useTranslation } from "@/lib/i18n";
-import { FlaskConical } from "lucide-react";
+export const metadata: Metadata = {
+  title: 'Mojibake Fixer - Encoding Repair Tool | 乱码修复工具 - DogUp DevTools',
+  description: 'Fix garbled text (mojibake) by detecting and converting character encodings. Supports UTF-8, GBK, GB2312, ISO-8859-1, Shift_JIS, EUC-KR and more. 修复乱码文本，自动检测并转换字符编码，支持UTF-8/GBK/GB2312/ISO-8859-1/Shift_JIS等。',
+  keywords: ['Mojibake', '乱码修复', 'Encoding Fix', '字符编码', 'Garbled Text', 'UTF-8', 'GBK', 'GB2312', 'Character Encoding', '编码转换', 'Mojibake Fixer', 'Text Encoding Repair', '乱码恢复'],
+  openGraph: {
+    title: 'Mojibake Fixer - Encoding Repair Tool | 乱码修复工具',
+    description: 'Fix garbled text by detecting and converting character encodings automatically.',
+    url: 'https://dogupup.com/mojibake',
+    type: 'website',
+  },
+};
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Mojibake Fixer - Encoding Repair Tool",
+  "url": "https://dogupup.com/mojibake",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any (Web Browser)",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+};
 
 export default function MojibakePage() {
-  const { t } = useTranslation();
   return (
-    <div className="container mx-auto px-4 py-6 space-y-6">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-extrabold tracking-tight">{t('mojibake.title')}</h1>
-        <p className="text-muted-foreground text-lg font-medium">{t('mojibake.desc')}</p>
-      </div>
-      <Mojibake />
-
-      <section className="bg-muted/50 dark:bg-muted/20 rounded-2xl py-8 px-6">
-        <div className="bg-card rounded-2xl p-7 sm:p-8 border border-border">
-          <h2 className="text-xl font-bold mb-4 flex items-center">
-            <FlaskConical className="w-5 h-5 mr-3 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-            {t('seo.mojibake.what')}
-          </h2>
-          <p className="text-muted-foreground leading-relaxed">{t('seo.mojibake.what.body')}</p>
-        </div>
-      </section>
-    </div>
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <MojibakePageContent />
+    </>
   );
 }

@@ -1,25 +1,33 @@
-"use client";
+import { Metadata } from 'next';
+import JsonLabPageContent from './_content';
 
-import JsonLab from "@/components/tools/JsonLab";
-import { ToolFAQ } from "@/components/tools/ToolFAQ";
-import { useTranslation } from "@/lib/i18n";
+export const metadata: Metadata = {
+  title: 'JSON Formatter & Validator | JSON格式化验证工具 - DogUp DevTools',
+  description: 'Format, validate, and explore JSON structures online. Supports lenient parsing (JSON5, JSONC), multi-language code generation, path extraction, and tree view. 在线JSON格式化、验证、代码生成工具，支持容错解析(JSON5/JSONC)和多语言代码生成。',
+  keywords: ['JSON Formatter', 'JSON Validator', 'JSON Parser', 'JSON格式化', 'JSON验证', 'JSON解析', 'JSON5', 'JSONC', 'JSON Code Generator', 'JSON Path', 'JSON Tree View', 'JSON在线工具', 'JSON Beautifier'],
+  openGraph: {
+    title: 'JSON Formatter & Validator | JSON格式化验证工具',
+    description: 'Format, validate, and explore JSON with lenient parsing, code generation, and tree view.',
+    url: 'https://dogupup.com/json-lab',
+    type: 'website',
+  },
+};
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "JSON Formatter & Validator",
+  "url": "https://dogupup.com/json-lab",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any (Web Browser)",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+};
 
 export default function JsonLabPage() {
-  const { t } = useTranslation();
-
-  const faqs = [
-    { q: t('faq.json.q1'), a: t('faq.json.a1') },
-    { q: t('faq.json.q2'), a: t('faq.json.a2') },
-    { q: t('faq.json.q3'), a: t('faq.json.a3') },
-    { q: t('faq.json.q4'), a: t('faq.json.a4') },
-  ];
-
   return (
-    <div className="container mx-auto px-4 py-6 space-y-8">
-      <div className="h-[calc(100vh-120px)] min-h-[500px]">
-        <JsonLab />
-      </div>
-      <ToolFAQ faqs={faqs} />
-    </div>
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <JsonLabPageContent />
+    </>
   );
 }

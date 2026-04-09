@@ -1,43 +1,33 @@
-"use client";
+import { Metadata } from 'next';
+import MavenTreePageContent from './_content';
 
-import MavenTree from "@/components/tools/MavenTree";
-import { ToolFAQ } from "@/components/tools/ToolFAQ";
-import { useTranslation } from "@/lib/i18n";
-import { GitBranch } from "lucide-react";
+export const metadata: Metadata = {
+  title: 'Maven Dependency Tree Analyzer | Maven依赖树可视化分析 - DogUp DevTools',
+  description: 'Visualize Maven dependency tree output, detect version conflicts and resolve Jar Hell. Paste mvn dependency:tree output for instant visual analysis. 可视化Maven依赖树，检测版本冲突，快速定位Jar Hell问题。',
+  keywords: ['Maven Dependency Tree', 'Maven依赖分析', 'Maven Dependency Conflict', 'Jar Hell', 'Maven依赖冲突', 'mvn dependency:tree', 'Maven依赖树可视化', 'Maven Dependency Visualization', 'Maven版本冲突'],
+  openGraph: {
+    title: 'Maven Dependency Tree Analyzer | Maven依赖树可视化分析',
+    description: 'Visualize mvn dependency:tree output, detect conflicts and resolve Jar Hell instantly.',
+    url: 'https://dogupup.com/maven-tree',
+    type: 'website',
+  },
+};
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Maven Dependency Tree Analyzer",
+  "url": "https://dogupup.com/maven-tree",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any (Web Browser)",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+};
 
 export default function MavenTreePage() {
-  const { t } = useTranslation();
-
-  const faqs = [
-    { q: t('faq.maven.q1'), a: t('faq.maven.a1') },
-    { q: t('faq.maven.q2'), a: t('faq.maven.a2') },
-    { q: t('faq.maven.q3'), a: t('faq.maven.a3') },
-  ];
-
   return (
-    <div className="container mx-auto py-8 space-y-8">
-      <div className="space-y-4">
-        <h1 className="text-3xl font-extrabold tracking-tight text-slate-950 dark:text-slate-50">
-          {t('maven.title')}
-        </h1>
-        <p className="text-muted-foreground text-lg font-medium">
-          {t('maven.desc')}
-        </p>
-      </div>
-
-      <MavenTree />
-
-      <ToolFAQ faqs={faqs} />
-
-      <section className="bg-muted/50 dark:bg-muted/20 rounded-2xl py-8 px-6">
-        <div className="bg-card rounded-2xl p-7 sm:p-8 border border-border">
-          <h2 className="text-xl font-bold mb-4 flex items-center">
-            <GitBranch className="w-5 h-5 mr-3 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-            {t('seo.maven.what')}
-          </h2>
-          <p className="text-muted-foreground leading-relaxed">{t('seo.maven.what.body')}</p>
-        </div>
-      </section>
-    </div>
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <MavenTreePageContent />
+    </>
   );
 }

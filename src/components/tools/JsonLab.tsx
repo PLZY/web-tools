@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef, useMemo, type MutableRefObject } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Copy, XCircle, Zap, ArrowLeftRight,
@@ -9,7 +9,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useTranslation } from "@/lib/i18n";
-import { useTheme } from "next-themes";
 import {
   formatJson, autoRepairJson, getErrorLocation,
   generateJavaPojo, generateTsInterface,
@@ -18,23 +17,8 @@ import {
   generateGoStruct, generateProtobuf,
   parseCurl, generateCurl, CurlParseResult,
 } from "@/components/tools/json-lab/json-utils";
-import Editor, { loader } from "@monaco-editor/react";
 import dynamic from "next/dynamic";
 import { debounce } from "lodash";
-
-// 预加载 Monaco 资源（仅客户端）
-if (typeof window !== "undefined") {
-  loader.init();
-}
-
-// 编辑器加载占位
-const EditorLoading = () => (
-  <div className="flex items-center justify-center h-full w-full text-sm text-muted-foreground animate-pulse">
-    <div className="flex flex-col items-center gap-2">
-      <div className="w-5 h-5 border-2 border-muted-foreground/30 border-t-muted-foreground rounded-full animate-spin" />
-    </div>
-  </div>
-);
 import {
   Select, SelectContent, SelectItem,
   SelectTrigger, SelectValue,
@@ -59,14 +43,7 @@ type RightTab = "tree" | "transform";
 
 export default function JsonLab() {
   const { t } = useTranslation();
-  const { theme } = useTheme();
   const parsedRef = useRef<any>(null);
-  const jsonEditorRef = useRef<any>(null);
-  const curlEditorRef = useRef<any>(null);
-  const isProgrammaticChange = useRef(false);
-
-  // 主题：动态获取
-  const monacoTheme = theme === "dark" ? "vs-dark" : "light";
 
   // 输入模式：JSON 或 cURL（默认 JSON 无内容，cURL 有示例）
   const [inputMode, setInputMode] = useState<InputMode>("json");
@@ -117,15 +94,6 @@ export default function JsonLab() {
   // 按钮交互状态
   const [copiedTab, setCopiedTab] = useState<string | null>(null);
 
-  // ── 编辑器辅助：程序化设置值 ──────────────────────────────────────────────
-  const setEditorValue = useCallback((editorRef: MutableRefObject<any>, value: string, stateSetter: (v: string) => void) => {
-    isProgrammaticChange.current = true;
-    stateSetter(value);
-    if (editorRef.current) {
-      editorRef.current.setValue(value);
-    }
-    isProgrammaticChange.current = false;
-  }, []);
 
   // ── 解析 JSON（防抖 300ms）────────────────────────────────────────────────
 
@@ -246,17 +214,17 @@ export default function JsonLab() {
     if (isMinified) {
       if (parsedRef.current) {
         const expanded = formatJson(parsedRef.current);
-        setEditorValue(jsonEditorRef, expanded, setJsonInput);
+        setJsonInput(expanded);
         setFormattedJson(expanded);
       }
       setIsMinified(false);
     } else {
       const minified = minifyJson(jsonInput);
-      setEditorValue(jsonEditorRef, minified, setJsonInput);
+      setJsonInput(minified);
       setFormattedJson(minified);
       setIsMinified(true);
     }
-  }, [jsonInput, isMinified, setEditorValue]);
+  }, [jsonInput, isMinified]);
 
   // ── 驼峰 ↔ 下划线 自动转换 ─────────────────────────────────────────────
 
@@ -292,8 +260,8 @@ export default function JsonLab() {
       return;
     }
     parsedRef.current = converted; // sync update — don't wait for 300ms debounce
-    setEditorValue(jsonEditorRef, formatJson(converted), setJsonInput);
-  }, [hasSnakeCase, hasCamelCase, setEditorValue]);
+    setJsonInput(formatJson(converted));
+  }, [hasSnakeCase, hasCamelCase]);
 
   // ── 复制 ────────────────────────────────────────────────────────────────
 
@@ -308,8 +276,8 @@ export default function JsonLab() {
   // ── 清空 ────────────────────────────────────────────────────────────────
 
   const handleClear = useCallback(() => {
-    setEditorValue(jsonEditorRef, "", setJsonInput);
-    setEditorValue(curlEditorRef, "", setCurlInput);
+    setJsonInput("");
+    setCurlInput("");
     setFormattedJson("");
     setJsonError(null);
     setCurlParsed(null);
@@ -320,7 +288,7 @@ export default function JsonLab() {
     setJsonPath("$");
     setIsRepaired(false);
     setIsMinified(false);
-  }, [setEditorValue]);
+  }, []);
 
   // ── 过滤树 ────────────────────────────────────────────────────────────
 
@@ -441,62 +409,27 @@ export default function JsonLab() {
           </div>
         </div>
 
-        {/* Monaco 编辑器 */}
+        {/* 输入编辑器 */}
         <div className="relative flex-1 min-h-0">
           {inputMode === "json" ? (
-            <Editor
-              height="100%"
-              language="json"
-              theme={monacoTheme}
-              defaultValue={jsonInput}
-              loading={<EditorLoading />}
-              onMount={(editor) => { jsonEditorRef.current = editor; }}
-              onChange={(v) => {
-                if (!isProgrammaticChange.current) {
-                  setJsonInput(v || "");
-                }
-              }}
-              options={{
-                automaticLayout: true,
-                minimap: { enabled: false },
-                wordWrap: "on",
-                scrollBeyondLastLine: false,
-                fontSize: 13,
-                lineHeight: 20,
-                padding: { top: 12, bottom: 12 },
-                renderLineHighlight: "none",
-                overviewRulerLanes: 0,
-                hideCursorInOverviewRuler: true,
-                scrollbar: { vertical: "auto", horizontal: "hidden" },
-                formatOnPaste: false,
-              }}
+            <textarea
+              value={jsonInput}
+              onChange={(e) => setJsonInput(e.target.value)}
+              placeholder={t("jsonLab.input.placeholder")}
+              spellCheck={false}
+              autoComplete="off"
+              autoCorrect="off"
+              className="w-full h-full resize-none font-mono text-[13px] leading-5 p-3 bg-transparent outline-none text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-600"
             />
           ) : (
-            <Editor
-              height="100%"
-              language="shell"
-              theme={monacoTheme}
-              defaultValue={curlInput}
-              loading={<EditorLoading />}
-              onMount={(editor) => { curlEditorRef.current = editor; }}
-              onChange={(v) => {
-                if (!isProgrammaticChange.current) {
-                  setCurlInput(v || "");
-                }
-              }}
-              options={{
-                automaticLayout: true,
-                minimap: { enabled: false },
-                wordWrap: "on",
-                scrollBeyondLastLine: false,
-                fontSize: 13,
-                lineHeight: 20,
-                padding: { top: 12, bottom: 12 },
-                renderLineHighlight: "none",
-                overviewRulerLanes: 0,
-                hideCursorInOverviewRuler: true,
-                scrollbar: { vertical: "auto", horizontal: "hidden" },
-              }}
+            <textarea
+              value={curlInput}
+              onChange={(e) => setCurlInput(e.target.value)}
+              placeholder="curl https://api.example.com ..."
+              spellCheck={false}
+              autoComplete="off"
+              autoCorrect="off"
+              className="w-full h-full resize-none font-mono text-[13px] leading-5 p-3 bg-transparent outline-none text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-600"
             />
           )}
 
@@ -692,26 +625,16 @@ export default function JsonLab() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex-1 min-h-0">
-              <Editor
-                height="100%"
-                language={transformLang}
-                theme={monacoTheme}
-                value={transformedOutput}
-                loading={<EditorLoading />}
-                options={{
-                  readOnly: true,
-                  minimap: { enabled: false },
-                  wordWrap: "on",
-                  automaticLayout: true,
-                  scrollBeyondLastLine: false,
-                  fontSize: 13,
-                  lineHeight: 20,
-                  padding: { top: 12, bottom: 12 },
-                  renderLineHighlight: "none",
-                  overviewRulerLanes: 0,
-                }}
-              />
+            <div className="flex-1 min-h-0 overflow-auto">
+              {transformedOutput ? (
+                <pre className="h-full font-mono text-[13px] leading-5 p-3 text-slate-800 dark:text-slate-200 whitespace-pre overflow-auto">
+                  {transformedOutput}
+                </pre>
+              ) : (
+                <div className="flex items-center justify-center h-full text-sm text-slate-400">
+                  {t("jsonLab.input.placeholder")}
+                </div>
+              )}
             </div>
           </div>
         )}

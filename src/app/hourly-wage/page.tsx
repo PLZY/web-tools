@@ -1,45 +1,33 @@
-"use client";
+import { Metadata } from 'next';
+import HourlyWagePageContent from './_content';
 
-import HourlyWage from "@/components/tools/HourlyWage";
-import { useTranslation } from "@/lib/i18n";
+export const metadata: Metadata = {
+  title: 'Hourly Wage Calculator | 时薪计算器 - DogUp DevTools',
+  description: 'Calculate your real hourly wage including overtime, commute time, and hidden costs. Understand the true value of your working time. 计算真实时薪，包含加班、通勤时间和隐性成本，了解你工作时间的真正价值。',
+  keywords: ['Hourly Wage Calculator', '时薪计算器', 'Real Hourly Wage', '真实时薪', 'Salary Calculator', '工资计算器', 'Overtime Calculator', '加班费计算', 'Income Calculator', '收入计算'],
+  openGraph: {
+    title: 'Hourly Wage Calculator | 时薪计算器',
+    description: 'Calculate your real hourly wage including overtime, commute, and hidden costs.',
+    url: 'https://dogupup.com/hourly-wage',
+    type: 'website',
+  },
+};
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Hourly Wage Calculator",
+  "url": "https://dogupup.com/hourly-wage",
+  "applicationCategory": "FinanceApplication",
+  "operatingSystem": "Any (Web Browser)",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+};
 
 export default function HourlyWagePage() {
-  const { t } = useTranslation();
-
   return (
-    <div className="container mx-auto py-8 space-y-8">
-      <div className="space-y-3">
-        <h1 className="text-3xl font-extrabold tracking-tight">
-          {t("hourlyWage.page.title")}
-        </h1>
-        <p className="text-muted-foreground text-lg font-medium">
-          {t("hourlyWage.page.desc")}
-        </p>
-      </div>
-
-      {/* Intro — what this calculates and why */}
-      <div className="rounded-xl border border-border bg-muted/30 p-5 space-y-4 text-sm text-muted-foreground">
-        <div>
-          <h2 className="text-base font-bold text-foreground mb-1">{t("hourlyWage.seo.whatIs")}</h2>
-          <p className="leading-relaxed">{t("hourlyWage.seo.whatIs.body")}</p>
-        </div>
-        <div>
-          <h2 className="text-base font-bold text-foreground mb-1">{t("hourlyWage.seo.formula")}</h2>
-          <p className="font-mono text-xs bg-muted/60 rounded-lg px-4 py-3 leading-relaxed">
-            {t("hourlyWage.seo.formula.body")}
-          </p>
-        </div>
-      </div>
-
-      <HourlyWage />
-
-      {/* SEO Content */}
-      <div className="mt-16 space-y-6 text-sm text-muted-foreground border-t border-border pt-10">
-        <div>
-          <h2 className="text-lg font-bold text-foreground mb-2">{t("hourlyWage.seo.why")}</h2>
-          <p className="leading-relaxed">{t("hourlyWage.seo.why.body")}</p>
-        </div>
-      </div>
-    </div>
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <HourlyWagePageContent />
+    </>
   );
 }

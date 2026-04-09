@@ -456,6 +456,20 @@ export default function HomeClient() {
         </div>
       </div>
 
+      {/* About DogUp — SEO intro */}
+      <div className="relative z-10 shrink-0 px-4 sm:px-6 lg:px-8 mt-8">
+        <div className="max-w-3xl mx-auto">
+          <div className="p-6 rounded-2xl border border-border/60 bg-card/20 backdrop-blur-xl">
+            <h2 className="text-lg font-bold font-mono text-foreground mb-3">
+              {t("home.seo.title")}
+            </h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              {t("home.seo.text")}
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Bottom quote */}
       <div className="relative z-10 shrink-0 mt-6 pb-8 text-center">
         <p className="text-sm font-mono text-muted-foreground/40 italic">{t("home.quote")}</p>

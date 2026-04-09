@@ -1,10 +1,10 @@
 export const zh = {
   // Navbar & Common
   'nav.home': '首页',
-  'nav.maven': 'Maven 依赖',
+  'nav.maven': 'Maven 冲突检测',
   'nav.cron': 'Cron 翻译',
   'nav.logback': '日志配置',
-  'nav.jsonLab': 'JSON 实验室',
+  'nav.jsonLab': 'JSON 格式化',
   'nav.jvm': 'JVM 调优',
   'nav.hourlyWage': '时薪计算器',
   'common.clear': '清空',
@@ -23,15 +23,15 @@ export const zh = {
 
   // Home Page
   'home.title': '狗狗蹦跶工具站',
-  'home.seo.title': '狗狗蹦跶工具站 | DogUp DevTools - 开发者工具箱',
-  'home.seo.description': '提供 Maven 依赖、Cron 翻译、Log 配置、SQL 转 Java、JVM 调优等极客工具，助力 Java 开发者提升效率。',
-  'home.seo.keywords': 'Java工具, Logback配置, Maven依赖分析, Cron表达式, SQL转Java, JVM调优, DogUp',
+  'home.seo.title': '狗狗蹦跶工具站 | DogUp DevTools - 免费在线工具箱',
+  'home.seo.description': '免费在线工具箱，涵盖开发者工具与生活实用工具：JSON 格式化、Cron 表达式解析、Maven 冲突检测、JVM 调优、日志配置生成、cURL 构建、文本处理、时薪计算器、MBTI 性格测试等，所有工具浏览器端运行，无需注册。',
+  'home.seo.keywords': '在线工具箱, 免费工具, JSON格式化, Cron表达式, Maven依赖分析, JVM调优, 日志配置, cURL构建器, 文本处理, SQL拼接, 乱码还原, IDE快捷键, 时薪计算器, MBTI测试, 开发者工具, DogUp',
   'home.subtitle': '化繁为简，复杂配置一眼洞穿',
-  'home.maven.title': 'Maven 依赖',
+  'home.maven.title': 'Maven 冲突检测',
   'home.maven.desc': '依赖关系可视化分析。支持全路径解析与版本冲突高亮，提供便捷的依赖树检索与排查体验。',
   'home.cron.title': 'Cron 翻译',
   'home.cron.desc': '定时任务执行时序分析。支持 Spring、Quartz、xxl-job 等多种常用 Cron 表达式规范。',
-  'home.jsonLab.title': 'JSON 实验室',
+  'home.jsonLab.title': 'JSON 格式化',
   'home.jsonLab.desc': 'JSON 格式化、校验与结构分析，支持多语言代码生成和路径提取。',
   'home.logback.title': '日志配置',
   'home.logback.desc': 'Logback/Log4j2 配置文件生成器。交互式表单生成 XML 配置，开箱即用。',
@@ -43,12 +43,12 @@ export const zh = {
   'home.privacy.title': '数据安全性如何？',
   'home.privacy.desc': '“数据安全是我们的首要原则。本站所有解析逻辑均在客户端浏览器本地执行，您的源码、依赖文本或 DDL 数据不会上传至服务器。”',
   'home.intent.title': '为什么创建这个站点？',
-  'home.intent.desc': '“在日常开发中，我们经常需要处理复杂的 Maven 依赖冲突或调试多样的 Cron 表达式时序。建立这个站点是为了提供一个更直观、跨平台的在线辅助方案，方便大家快速定位问题。”',
-  'home.seo.text': 'DogUp DevTools 是一个专为 Java 开发者设计的在线工具集。在微服务和云原生架构中，Maven 依赖管理和 JVM 调优是提升系统稳定性的关键。我们的工具支持 standard mvn dependency:tree 解析，帮助开发者快速解决 Jar 包冲突。同时，通过 DDL 转 Java 实体类工具，可以大幅减少重复的建模工作。所有工具均遵循极简设计原则，致力于提升开发者的日常生产力分析。',
+  'home.intent.desc': '”日常工作和生活中总有一些小需求：格式化一段 JSON、算算真实时薪、排查依赖冲突、转换一段乱码……每次都要找不同的工具太麻烦了。这个站点把这些常用工具集中到一起，打开浏览器就能用，不用安装、不用注册。”',
+  'home.seo.text': 'DogUp DevTools（狗狗蹦跶工具站）是一个免费的在线工具箱，面向开发者和所有互联网用户。开发者工具涵盖：JSON 格式化与代码生成、Cron 表达式解析与翻译、Maven 依赖树可视化与冲突检测、JVM 启动参数调优、Logback/Log4j2 日志配置生成器、cURL 命令构建、SQL 拼接还原、文本批量处理与编码转换、乱码还原、IDE 快捷键对照等。生活工具包括：真实时薪计算器（计入通勤、午餐等隐性成本）、93 题完整版 MBTI 性格测试、以及摸鱼神器假装系统更新。所有工具均在浏览器端本地运行，不上传任何数据，无需注册账号，开箱即用。',
   'home.notes.title': '开发者寄语',
 
   // Maven Tool
-  'maven.title': 'Maven 依赖 (Dependency Analyzer)',
+  'maven.title': 'Maven 依赖冲突检测',
   'maven.desc': '可视化分析 mvn dependency:tree 输出，快速定位 Jar 包冲突与循环依赖。',
   'maven.input.title': '输入 Maven Output',
   'maven.input.placeholder': "请粘贴 'mvn dependency:tree' 的完整输出...",
@@ -371,7 +371,7 @@ export const zh = {
   'maven.node.contains_conflict': '内含冲突',
 
   // JSON Lab Tool
-  'jsonLab.title': 'JSON 实验室',
+  'jsonLab.title': 'JSON 格式化',
   'jsonLab.desc': '交互式 JSON 结构解析、格式化与多语言代码生成，超越传统在线工具的深度体验。',
   'jsonLab.help.title': 'JSON 实验室 - 使用指南与核心特性',
   'jsonLab.help.content': 'JSON 实验室提供了一套完整的 JSON 处理解决方案，包括格式化、压缩、去转义、自动修复以及强大的 JSONPath 路径提取功能，旨在帮助开发者更高效地处理和理解 JSON 数据。',
@@ -618,8 +618,8 @@ export const zh = {
   'diff.tooLarge': '文本超过 5000 行，为避免浏览器卡顿请缩减后重试',
 
   // Mojibake Forensics
-  'nav.mojibake': '乱码检测',
-  'mojibake.title': '乱码法医 (Mojibake Forensics)',
+  'nav.mojibake': '乱码还原',
+  'mojibake.title': '乱码还原',
   'mojibake.desc': '无需知道原编码，通过暴力交叉解码矩阵，瞬间从乱码中找出正确的人类语言。',
   'mojibake.inputLabel': '粘贴乱码文本',
   'mojibake.inputPlaceholder': '粘贴乱码文本，例如：ä½ å¥½ 或 ÄãºÃ...',
@@ -654,8 +654,8 @@ export const zh = {
   'mojibake.noHitsHex': '所有编码均未检测到连续中/日/韩文字。请确认字节序列正确。',
 
   // SQL Bind Stitcher
-  'nav.sqlStitcher': 'SQL 还原',
-  'sqlStitcher.title': 'ORM SQL 缝合器 (Bind Stitcher)',
+  'nav.sqlStitcher': 'SQL 拼接',
+  'sqlStitcher.title': 'SQL 参数拼接',
   'sqlStitcher.desc': '将带 ? 的 SQL 模板与参数日志强行对齐拼接，一键生成可直接跑的 Raw SQL。',
   'sqlStitcher.sqlLabel': 'SQL 模板',
   'sqlStitcher.sqlPlaceholder': '粘贴 Hibernate / MyBatis 打印的含 ? 的 SQL...',
@@ -716,9 +716,9 @@ export const zh = {
   'home.ideShortcuts.desc': 'Eclipse / IDEA / VS Code 三大 IDE 快捷键横向对照，低成本切换工具不再抓瞎。',
   'home.diff.title': '文本对比',
   'home.diff.desc': '双栏对比两段文本，逐字逐行高亮差异。',
-  'home.mojibake.title': '乱码检测',
+  'home.mojibake.title': '乱码还原',
   'home.mojibake.desc': '自动尝试多种编码组合，快速找出乱码原因，定位正确的编码方式。',
-  'home.sqlStitcher.title': 'SQL 还原',
+  'home.sqlStitcher.title': 'SQL 拼接',
   'home.sqlStitcher.desc': '将 ORM 框架输出的占位符与参数值拼合，还原为可直接执行的 SQL 语句。',
   'home.hourlyWage.title': '真实时薪计算器',
   'home.hourlyWage.desc': '戳破"表面高薪"的幻觉，量化打工隐性成本，算出真正的净购买力时薪。',
@@ -858,6 +858,34 @@ export const zh = {
   'hourlyWage.exchange.hours': '小时',
   'hourlyWage.exchange.days': '天',
   'hourlyWage.unit.wan': '万',
+
+  // JSON Lab SEO
+  'seo.json.what': '为什么需要在线 JSON 格式化工具？',
+  'seo.json.what.body': 'JSON（JavaScript Object Notation）是 REST API、配置文件、NoSQL 数据库和消息队列中最主流的数据交换格式。日常开发中，你会不断遇到压缩成一行的 API 响应、层层嵌套的配置、以及完全无法阅读的日志负载。在线 JSON 格式化工具让你直接粘贴原始 JSON，瞬间以正确缩进美化输出，并通过树形结构可视化导航——无需安装任何软件。本工具更进一步：支持宽松解析模式（JSON5、带注释和尾逗号的 JSONC），所以你可以直接粘贴现实中那些"不太标准"的 JSON，依然能得到干净的结果。内置代码生成器可将你的 JSON 结构一键转换为 Java、TypeScript、Go、Python、Kotlin 等语言的数据类，省去大量手写样板代码的时间。路径提取功能让你点击任意节点即可获取其 JSONPath 或点分路径，在编写 jq、Jackson、Gson 等工具的提取逻辑时非常实用。所有处理 100% 在浏览器中运行——你的 API 密钥、Token 和生产数据永远不会离开你的电脑。',
+
+  // Text Format SEO
+  'seo.textformat.what': '文本处理的常见场景',
+  'seo.textformat.what.body': '文本转换是软件开发中最频繁的微任务之一，但手动操作却出奇地烦人。需要把一堆 SQL 列名转成 UPPER_CASE 做 DDL 迁移？想在粘贴到 JWT 调试器之前对 JSON 做 Base64 编码？有一份带重复行的 CSV 需要去重后才能导入？这些本该 10 秒搞定的小事，如果要打开终端、想起正确的命令、再 pipe 输出，就会严重打断你的开发节奏。本工具将最常用的文本操作——大小写转换（UPPER、lower、Title Case、camelCase、snake_case）、编码解码（Base64、URL 百分号编码）、排序、去重、去空行、行编号、添加前后缀——集成到一个界面中，即时预览结果。所有处理在浏览器本地运行，你可以放心粘贴包含凭证、API 密钥或内部数据的文本，无需担心泄露。',
+
+  // cURL Builder SEO
+  'seo.curl.what': '为什么需要可视化 cURL 构建器？',
+  'seo.curl.what.body': 'cURL 是最通用的 HTTP 命令行工具，每天有数百万开发者用它来测试 API、调试 Webhook 和自动化流程。但手写一条正确转义的 cURL 命令却出奇地容易出错——尤其是需要处理认证 Token、multipart 文件上传，或者在 macOS/Linux Shell 和 Windows CMD/PowerShell 之间切换语法时。可视化 cURL 构建器让你通过结构化表单填写请求方法、URL、Header、Cookie、认证和 Body，自动生成针对目标平台正确转义的命令，直接复制粘贴即可运行。本工具还支持反向操作：粘贴任意 cURL 命令，自动解析回表单字段供你编辑。无论是探索新 API、与同事分享可复现的请求、还是将 Postman 请求转为 cURL，这个构建器都能帮你避免引号噩梦。所有操作在浏览器中完成，不上传任何数据。',
+  'faq.curl.q1': '支持哪些平台？',
+  'faq.curl.a1': '工具为三个目标平台生成正确引号转义的命令：macOS/Linux（Bash）、Windows CMD 和 PowerShell。每个平台的引号和转义规则不同，工具会自动处理。',
+  'faq.curl.q2': '可以解析已有的 cURL 命令吗？',
+  'faq.curl.a2': '可以。将任意 cURL 命令粘贴到解析输入框，点击"解析"即可。工具会将请求方法、URL、Header、Body 和选项提取回表单供你编辑。',
+  'faq.curl.q3': '这个工具会发送真实的 HTTP 请求吗？',
+  'faq.curl.a3': '不会。本工具只生成 cURL 命令文本，不执行任何网络请求。你需要将生成的命令复制到自己的终端中运行。',
+
+  // Fake Update SEO
+  'seo.fakeUpdate.what': '假装系统更新是怎么工作的？',
+  'seo.fakeUpdate.what.body': '假装系统更新工具渲染一个像素级还原的全屏操作系统更新界面。你可以选择 Windows 更新（经典蓝屏配旋转圆圈）或 macOS 更新（黑屏配 Apple Logo 和进度条）。启动后，进度条遵循精心设计的时间线：快速涨到约 27%，然后在这个位置卡住整整十分钟，之后以随机间隔缓慢爬升，最终永久卡在 89%——完美模拟了真实系统更新那种"永远装不完"的感觉。随时快速连按两次 ESC 键即可退出。整个模拟完全在浏览器中以 CSS/JS 动画运行，不发送任何网络请求。常见用途包括：在工位上享受一个正当的屏幕休息、整蛊同事、为演示或教程制作逼真的截图，或者单纯享受"比真实更新还稳定"的讽刺乐趣。',
+  'faq.fakeUpdate.q1': '怎么退出假装更新界面？',
+  'faq.fakeUpdate.a1': '在 500 毫秒内快速连按两次 ESC 键即可退出。这个双击设计是为了防止单次误触导致退出。',
+  'faq.fakeUpdate.q2': '支持哪些操作系统风格？',
+  'faq.fakeUpdate.a2': '目前支持 Windows 更新和 macOS 更新两种风格。每种风格都经过精心设计，尽可能还原真实的更新界面。',
+  'faq.fakeUpdate.q3': '会消耗网络资源吗？',
+  'faq.fakeUpdate.a3': '不会。整个模拟是纯本地的 CSS/JS 动画，不下载也不上传任何数据，断网也能正常使用。',
 
   // Tool SEO descriptions
   'seo.cron.what': '支持哪些 Cron 格式？',

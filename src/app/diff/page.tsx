@@ -1,28 +1,33 @@
-"use client";
+import { Metadata } from 'next';
+import DiffPageContent from './_content';
 
-import TextDiff from "@/components/tools/TextDiff";
-import { useTranslation } from "@/lib/i18n";
-import { GitCompare } from "lucide-react";
+export const metadata: Metadata = {
+  title: 'Text Diff Comparison Tool | 文本对比差异工具 - DogUp DevTools',
+  description: 'Compare two texts side by side and highlight differences instantly. Supports inline and side-by-side diff views. All data stays in your browser — nothing is uploaded. 在线文本对比工具，支持并排和内联差异显示，数据完全不离开浏览器。',
+  keywords: ['Text Diff', '文本对比', 'Diff Tool', '差异对比', 'Text Compare', 'Code Diff', '代码对比', 'File Diff', 'Online Diff', '在线对比工具', 'Side by Side Diff'],
+  openGraph: {
+    title: 'Text Diff Comparison Tool | 文本对比差异工具',
+    description: 'Compare texts side by side with highlighted differences. Private and browser-only.',
+    url: 'https://dogupup.com/diff',
+    type: 'website',
+  },
+};
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Text Diff Comparison Tool",
+  "url": "https://dogupup.com/diff",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any (Web Browser)",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+};
 
 export default function DiffPage() {
-  const { t } = useTranslation();
   return (
-    <div className="container mx-auto px-4 py-6 space-y-6">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-extrabold tracking-tight">{t('diff.title')}</h1>
-        <p className="text-muted-foreground text-lg font-medium">{t('diff.desc')}</p>
-      </div>
-      <TextDiff />
-
-      <section className="bg-muted/50 dark:bg-muted/20 rounded-2xl py-8 px-6">
-        <div className="bg-card rounded-2xl p-7 sm:p-8 border border-border">
-          <h2 className="text-xl font-bold mb-4 flex items-center">
-            <GitCompare className="w-5 h-5 mr-3 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-            {t('seo.diff.what')}
-          </h2>
-          <p className="text-muted-foreground leading-relaxed">{t('seo.diff.what.body')}</p>
-        </div>
-      </section>
-    </div>
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <DiffPageContent />
+    </>
   );
 }

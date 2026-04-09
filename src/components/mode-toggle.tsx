@@ -28,18 +28,34 @@ export function ModeToggle() {
     })
 
     transition.ready.then(() => {
-      const clipPath = [
-        `circle(0px at ${x}px ${y}px)`,
-        `circle(${endRadius}px at ${x}px ${y}px)`,
-      ]
-      document.documentElement.animate(
-        { clipPath: newTheme === "dark" ? [...clipPath].reverse() : clipPath },
-        {
-          duration: 500,
-          easing: "ease-in-out",
-          pseudoElement: newTheme === "dark" ? "::view-transition-old(root)" : "::view-transition-new(root)",
-        }
-      )
+      if (newTheme === "dark") {
+        // Light → Dark: hide new (dark) snapshot, shrink old (light) snapshot
+        // to reveal the real dark page underneath
+        document.documentElement.animate(
+          { opacity: [0, 0] },
+          { duration: 400, pseudoElement: "::view-transition-new(root)" }
+        )
+        document.documentElement.animate(
+          {
+            clipPath: [
+              `circle(${endRadius}px at ${x}px ${y}px)`,
+              `circle(0px at ${x}px ${y}px)`,
+            ],
+          },
+          { duration: 400, easing: "ease-in-out", pseudoElement: "::view-transition-old(root)" }
+        )
+      } else {
+        // Dark → Light: new view (light) expands outward from the icon
+        document.documentElement.animate(
+          {
+            clipPath: [
+              `circle(0px at ${x}px ${y}px)`,
+              `circle(${endRadius}px at ${x}px ${y}px)`,
+            ],
+          },
+          { duration: 400, easing: "ease-in-out", pseudoElement: "::view-transition-new(root)" }
+        )
+      }
     })
   }
 

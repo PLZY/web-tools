@@ -1,18 +1,17 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo, type UIEvent } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Copy, XCircle, Zap, ArrowLeftRight,
-  Minimize2, ChevronRight, Terminal, Check, Expand,
+  Minimize2, ChevronRight, Terminal, Check, Expand, AlignLeft,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { useTranslation } from "@/lib/i18n";
 import {
-  formatJson, autoRepairJson, getErrorLocation,
+  formatJson, getErrorLocation,
   generateJavaPojo, generateTsInterface,
-  jsonToYaml, jsonToXml, minifyJson,
+  jsonToYaml, jsonToXml,
   snakeToCamelKeys, camelToSnakeKeys,
   generateGoStruct, generateProtobuf,
   parseCurl, generateCurl, CurlParseResult,
@@ -38,12 +37,119 @@ type TransformTarget = "java" | "typescript" | "yaml" | "xml" | "go" | "protobuf
 
 // 右侧 Tab
 type RightTab = "tree" | "transform";
+type TreeCommand = { id: number; type: "expandAll" | "collapseAll" } | null;
+
+function normalizeJsonInput(value: string) {
+  let processedInput = value.trim();
+  if (processedInput.startsWith('"') && processedInput.endsWith('"')) {
+    try {
+      const unescaped = JSON.parse(processedInput);
+      if (typeof unescaped === "string") processedInput = unescaped;
+    } catch { /* 保持原样 */ }
+  }
+  return processedInput;
+}
+
+function parseJsonStrict(value: string) {
+  const processedInput = normalizeJsonInput(value);
+  return JSON.parse(processedInput);
+}
+
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function isJsonObject(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function deleteJsonPath(value: unknown, path: Array<string | number>): unknown {
+  if (path.length === 0) return value;
+
+  const [head, ...rest] = path;
+  if (Array.isArray(value)) {
+    const index = Number(head);
+    if (!Number.isInteger(index) || index < 0 || index >= value.length) return value;
+    const next = [...value];
+    if (rest.length === 0) {
+      next.splice(index, 1);
+    } else {
+      next[index] = deleteJsonPath(next[index], rest);
+    }
+    return next;
+  }
+
+  if (isJsonObject(value)) {
+    const key = String(head);
+    if (!Object.prototype.hasOwnProperty.call(value, key)) return value;
+    const next = { ...value };
+    if (rest.length === 0) {
+      delete next[key];
+    } else {
+      next[key] = deleteJsonPath(next[key], rest);
+    }
+    return next;
+  }
+
+  return value;
+}
+
+function NumberedTextarea({
+  value,
+  onChange,
+  placeholder,
+  errorLine,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  errorLine?: number;
+}) {
+  const [scrollTop, setScrollTop] = useState(0);
+  const lineCount = useMemo(() => Math.max(1, value.split("\n").length), [value]);
+
+  return (
+    <div className="relative h-full w-full overflow-hidden bg-transparent">
+      <div className="absolute inset-y-0 left-0 z-10 w-12 select-none overflow-hidden border-r border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/60">
+        <div className="pt-3" style={{ transform: `translateY(-${scrollTop}px)` }}>
+          {Array.from({ length: lineCount }, (_, index) => {
+            const line = index + 1;
+            const isError = errorLine === line;
+            return (
+              <div
+                key={line}
+                  className={`h-6 pr-2 text-right font-mono text-[12px] leading-6 ${
+                  isError
+                    ? "bg-red-100 font-semibold text-red-600 dark:bg-red-950/70 dark:text-red-300"
+                    : "text-slate-400 dark:text-slate-600"
+                }`}
+              >
+                {line}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      <textarea
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        onScroll={(event: UIEvent<HTMLTextAreaElement>) => setScrollTop(event.currentTarget.scrollTop)}
+        placeholder={placeholder}
+        spellCheck={false}
+        autoComplete="off"
+        autoCorrect="off"
+        className="h-full w-full resize-none bg-transparent py-3 pl-16 pr-3 font-mono text-[14px] leading-6 text-slate-800 outline-none placeholder:text-slate-400 dark:text-slate-200 dark:placeholder:text-slate-600"
+      />
+    </div>
+  );
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function JsonLab() {
   const { t } = useTranslation();
-  const parsedRef = useRef<any>(null);
+  const parsedRef = useRef<unknown | null>(null);
+  const skipNextJsonParseRef = useRef(false);
 
   // 输入模式：JSON 或 cURL（默认 JSON 无内容，cURL 有示例）
   const [inputMode, setInputMode] = useState<InputMode>("json");
@@ -82,6 +188,8 @@ export default function JsonLab() {
   // 树搜索 & 路径
   const [filterText, setFilterText] = useState<string>("");
   const [jsonPath, setJsonPath] = useState<string>("$");
+  const [treeCommand, setTreeCommand] = useState<TreeCommand>(null);
+  const [treeResetId, setTreeResetId] = useState(0);
 
   // 转换
   const [transformTarget, setTransformTarget] = useState<TransformTarget>("typescript");
@@ -105,46 +213,33 @@ export default function JsonLab() {
         setFormattedJson("");
         setJsonError(null);
         setIsRepaired(false);
+        setTreeCommand(null);
         return;
       }
 
       let processedInput = value;
-      let repairAttempted = false;
 
-      if (value.startsWith('"') && value.endsWith('"')) {
-        try {
-          const unescaped = JSON.parse(value);
-          if (typeof unescaped === "string") processedInput = unescaped;
-        } catch { /* 保持原样 */ }
-      }
+      processedInput = normalizeJsonInput(value);
 
       try {
         const parsed = JSON.parse(processedInput);
         parsedRef.current = parsed;
         setParsedVersion(v => v + 1);
+        setTreeResetId(v => v + 1);
         setFormattedJson(isMinifiedRef.current ? JSON.stringify(parsed) : formatJson(parsed));
         setJsonError(null);
         setIsRepaired(false);
-      } catch {
-        try {
-          const repaired = autoRepairJson(processedInput);
-          if (repaired !== processedInput) repairAttempted = true;
-          const parsed = JSON.parse(repaired);
-          parsedRef.current = parsed;
-          setParsedVersion(v => v + 1);
-          setFormattedJson(isMinifiedRef.current ? JSON.stringify(parsed) : formatJson(parsed));
-          setJsonError(null);
-          setIsRepaired(repairAttempted);
-        } catch (repairError: any) {
-          const loc = getErrorLocation(processedInput, repairError.message);
-          parsedRef.current = null;
-          setParsedVersion(v => v + 1);
-          setFormattedJson(isMinifiedRef.current ? minifyJson(processedInput) : processedInput);
-          setJsonError(loc);
-          setIsRepaired(false);
-        }
+        setTreeCommand(null);
+      } catch (parseError: unknown) {
+        const loc = getErrorLocation(processedInput, getErrorMessage(parseError));
+        parsedRef.current = null;
+        setParsedVersion(v => v + 1);
+        setFormattedJson("");
+        setJsonError(loc);
+        setIsRepaired(false);
+        setTreeCommand(null);
       }
-    }, 300),
+    }, 120),
     []
   );
 
@@ -161,8 +256,8 @@ export default function JsonLab() {
         const result = parseCurl(value);
         setCurlParsed(result);
         setCurlError(null);
-      } catch (e: any) {
-        setCurlError(e.message);
+      } catch (error: unknown) {
+        setCurlError(getErrorMessage(error));
         setCurlParsed(null);
       }
     }, 500),
@@ -172,6 +267,10 @@ export default function JsonLab() {
   // 当输入内容变化时，根据模式自动解析
   useEffect(() => {
     if (inputMode === "json") {
+      if (skipNextJsonParseRef.current) {
+        skipNextJsonParseRef.current = false;
+        return;
+      }
       debouncedParseJson(jsonInput);
     } else {
       debouncedParseCurl(curlInput);
@@ -187,9 +286,11 @@ export default function JsonLab() {
           : curlParsed.body;
         parsedRef.current = bodyJson;
         setParsedVersion(v => v + 1);
+        setTreeResetId(v => v + 1);
         setFormattedJson(formatJson(bodyJson));
         setJsonError(null);
         setIsRepaired(false);
+        setTreeCommand(null);
       } catch {
         // body 不是有效 JSON，保持原样
       }
@@ -208,39 +309,63 @@ export default function JsonLab() {
     setTimeout(() => setCopiedTab(null), 1500);
   }, []);
 
-  // ── 压缩/展开 ───────────────────────────────────────────────────────────
+  // ── 格式化 / 压缩 ──────────────────────────────────────────────────────
 
-  const handleMinify = useCallback(() => {
-    if (isMinified) {
-      if (parsedRef.current) {
-        const expanded = formatJson(parsedRef.current);
-        setJsonInput(expanded);
-        setFormattedJson(expanded);
-      }
+  const handleFormatInput = useCallback(() => {
+    if (!jsonInput.trim()) return;
+    try {
+      const parsed = parseJsonStrict(jsonInput);
+      const formatted = formatJson(parsed);
+      parsedRef.current = parsed;
+      skipNextJsonParseRef.current = true;
+      setJsonInput(formatted);
+      setFormattedJson(formatted);
+      setJsonError(null);
+      setIsRepaired(false);
       setIsMinified(false);
-    } else {
-      const minified = minifyJson(jsonInput);
+    } catch (error: unknown) {
+      parsedRef.current = null;
+      setParsedVersion(v => v + 1);
+      setFormattedJson("");
+      setJsonError(getErrorLocation(jsonInput, getErrorMessage(error)));
+    }
+  }, [jsonInput]);
+
+  const handleMinifyInput = useCallback(() => {
+    if (!jsonInput.trim()) return;
+    try {
+      const parsed = parseJsonStrict(jsonInput);
+      const minified = JSON.stringify(parsed);
+      parsedRef.current = parsed;
+      skipNextJsonParseRef.current = true;
       setJsonInput(minified);
       setFormattedJson(minified);
+      setJsonError(null);
+      setIsRepaired(false);
       setIsMinified(true);
+    } catch (error: unknown) {
+      parsedRef.current = null;
+      setParsedVersion(v => v + 1);
+      setFormattedJson("");
+      setJsonError(getErrorLocation(jsonInput, getErrorMessage(error)));
     }
-  }, [jsonInput, isMinified]);
+  }, [jsonInput]);
 
   // ── 驼峰 ↔ 下划线 自动转换 ─────────────────────────────────────────────
 
-  const hasSnakeCase = useCallback((obj: any): boolean => {
+  const hasSnakeCase = useCallback((obj: unknown): boolean => {
     if (typeof obj === "string") return obj.includes("_") && /^[a-z][a-z0-9]*_[a-z0-9]+/.test(obj);
     if (Array.isArray(obj)) return obj.some(hasSnakeCase);
-    if (typeof obj === "object" && obj !== null) {
+    if (isJsonObject(obj)) {
       return Object.keys(obj).some(k => /^[a-z][a-z0-9]*_[a-z0-9]+/.test(k)) || Object.values(obj).some(hasSnakeCase);
     }
     return false;
   }, []);
 
-  const hasCamelCase = useCallback((obj: any): boolean => {
+  const hasCamelCase = useCallback((obj: unknown): boolean => {
     if (typeof obj === "string") return /[a-z][A-Z]/.test(obj);
     if (Array.isArray(obj)) return obj.some(hasCamelCase);
-    if (typeof obj === "object" && obj !== null) {
+    if (isJsonObject(obj)) {
       return Object.keys(obj).some(k => /[a-z][A-Z]/.test(k)) || Object.values(obj).some(hasCamelCase);
     }
     return false;
@@ -251,7 +376,7 @@ export default function JsonLab() {
     const isSnake = hasSnakeCase(parsedRef.current);
     const isCamel = hasCamelCase(parsedRef.current);
     
-    let converted: any;
+    let converted: unknown;
     if (isCamel) {
       converted = camelToSnakeKeys(parsedRef.current);
     } else if (isSnake) {
@@ -260,7 +385,12 @@ export default function JsonLab() {
       return;
     }
     parsedRef.current = converted; // sync update — don't wait for 300ms debounce
-    setJsonInput(formatJson(converted));
+    setParsedVersion(v => v + 1);
+    setTreeResetId(v => v + 1);
+    const nextJson = isMinifiedRef.current ? JSON.stringify(converted) : formatJson(converted);
+    setJsonInput(nextJson);
+    setFormattedJson(nextJson);
+    setTreeCommand(null);
   }, [hasSnakeCase, hasCamelCase]);
 
   // ── 复制 ────────────────────────────────────────────────────────────────
@@ -271,6 +401,21 @@ export default function JsonLab() {
       setCopiedTab(tabName);
       setTimeout(() => setCopiedTab(null), 1500);
     }
+  }, []);
+
+  const handleDeleteJsonPath = useCallback((path: Array<string | number>) => {
+    if (parsedRef.current === null) return;
+    const nextJson = deleteJsonPath(parsedRef.current, path);
+    const nextText = isMinifiedRef.current ? JSON.stringify(nextJson) : formatJson(nextJson);
+    parsedRef.current = nextJson;
+    skipNextJsonParseRef.current = true;
+    setParsedVersion(v => v + 1);
+    setJsonInput(nextText);
+    setFormattedJson(nextText);
+    setJsonError(null);
+    setFilterText("");
+    setJsonPath("$");
+    setTreeCommand(null);
   }, []);
 
   // ── 清空 ────────────────────────────────────────────────────────────────
@@ -288,34 +433,8 @@ export default function JsonLab() {
     setJsonPath("$");
     setIsRepaired(false);
     setIsMinified(false);
+    setTreeCommand(null);
   }, []);
-
-  // ── 过滤树 ────────────────────────────────────────────────────────────
-
-  const filteredJson = useMemo(() => {
-    if (!filterText || !parsedRef.current) return parsedRef.current;
-    const lower = filterText.toLowerCase();
-    const filter = (data: any): any => {
-      if (Array.isArray(data)) {
-        const r = data.map(filter).filter((x) => x !== undefined);
-        return r.length > 0 ? r : undefined;
-      }
-      if (typeof data === "object" && data !== null) {
-        const r: Record<string, any> = {};
-        for (const key in data) {
-          if (!Object.prototype.hasOwnProperty.call(data, key)) continue;
-          if (key.toLowerCase().includes(lower)) { r[key] = data[key]; continue; }
-          const child = filter(data[key]);
-          if (child !== undefined) r[key] = child;
-        }
-        return Object.keys(r).length > 0 ? r : undefined;
-      }
-      if (typeof data === "string" && data.toLowerCase().includes(lower)) return data;
-      return undefined;
-    };
-    return filter(parsedRef.current);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterText, parsedVersion]);
 
   // ── 转换结果 ──────────────────────────────────────────────────────────
 
@@ -332,18 +451,6 @@ export default function JsonLab() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [parsedVersion, transformTarget]);
-
-  const transformLang = useMemo(() => {
-    switch (transformTarget) {
-      case "java":       return "java";
-      case "typescript": return "typescript";
-      case "yaml":       return "yaml";
-      case "xml":        return "xml";
-      case "go":         return "go";
-      case "protobuf":   return "protobuf";
-      default:           return "plaintext";
-    }
-  }, [transformTarget]);
 
   // ─────────────────────────────────────────────────────────────────────
   // 渲染
@@ -398,6 +505,28 @@ export default function JsonLab() {
                 {t("jsonLab.cockpit.autoRepaired")}
               </span>
             )}
+            {inputMode === "json" && (
+              <>
+                <Button
+                  variant={isMinified ? "ghost" : "secondary"}
+                  size="sm"
+                  className="h-6 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  onClick={handleFormatInput}
+                >
+                  <AlignLeft className="h-3 w-3 mr-1" />
+                  {t("jsonLab.format.label")}
+                </Button>
+                <Button
+                  variant={isMinified ? "secondary" : "ghost"}
+                  size="sm"
+                  className="h-6 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  onClick={handleMinifyInput}
+                >
+                  <Minimize2 className="h-3 w-3 mr-1" />
+                  {t("jsonLab.minify.label")}
+                </Button>
+              </>
+            )}
             <Button 
               variant="ghost" 
               size="sm" 
@@ -412,24 +541,17 @@ export default function JsonLab() {
         {/* 输入编辑器 */}
         <div className="relative flex-1 min-h-0">
           {inputMode === "json" ? (
-            <textarea
+            <NumberedTextarea
               value={jsonInput}
-              onChange={(e) => setJsonInput(e.target.value)}
+              onChange={setJsonInput}
               placeholder={t("jsonLab.input.placeholder")}
-              spellCheck={false}
-              autoComplete="off"
-              autoCorrect="off"
-              className="w-full h-full resize-none font-mono text-[13px] leading-5 p-3 bg-transparent outline-none text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-600"
+              errorLine={jsonError?.line}
             />
           ) : (
-            <textarea
+            <NumberedTextarea
               value={curlInput}
-              onChange={(e) => setCurlInput(e.target.value)}
+              onChange={setCurlInput}
               placeholder="curl https://api.example.com ..."
-              spellCheck={false}
-              autoComplete="off"
-              autoCorrect="off"
-              className="w-full h-full resize-none font-mono text-[13px] leading-5 p-3 bg-transparent outline-none text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-600"
             />
           )}
 
@@ -476,19 +598,6 @@ export default function JsonLab() {
 
           {/* 右侧操作按钮组 */}
           <div className="flex items-center gap-1 mr-2">
-            {/* 压缩/展开 */}
-            {inputMode === "json" && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-6 text-xs text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800" 
-                onClick={handleMinify}
-              >
-                {isMinified ? <Expand className="h-3 w-3 mr-1" /> : <Minimize2 className="h-3 w-3 mr-1" />}
-                {isMinified ? t("jsonLab.expand.label") : t("jsonLab.minify.label")}
-              </Button>
-            )}
-
             {/* 驼峰 ↔ 下划线 */}
             {inputMode === "json" && (
               <Button 
@@ -559,6 +668,28 @@ export default function JsonLab() {
                   <XCircle className="h-3.5 w-3.5" />
                 </Button>
               )}
+              {parsedRef.current !== null && (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-2 text-xs text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    onClick={() => setTreeCommand({ id: Date.now(), type: "expandAll" })}
+                  >
+                    <Expand className="h-3.5 w-3.5 mr-1" />
+                    {t("jsonLab.tree.expandAll")}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-2 text-xs text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    onClick={() => setTreeCommand({ id: Date.now(), type: "collapseAll" })}
+                  >
+                    <Minimize2 className="h-3.5 w-3.5 mr-1" />
+                    {t("jsonLab.tree.collapseAll")}
+                  </Button>
+                </>
+              )}
             </div>
 
             {/* JSONPath 面包屑 */}
@@ -575,30 +706,32 @@ export default function JsonLab() {
 
             {/* 树视图 */}
             <div className="flex-1 min-h-0 overflow-auto rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-2">
-              {isMinified ? (
-                <Textarea
-                  className="font-mono text-sm h-full w-full border-none focus-visible:ring-0 resize-none bg-transparent"
-                  readOnly
-                  value={formattedJson}
-                />
-              ) : parsedRef.current ? (
+              {parsedRef.current !== null ? (
                 <JsonTreeViewer
-                  json={filteredJson || {}}
+                  key={`${treeResetId}-${treeCommand?.id ?? 0}`}
+                  json={parsedRef.current}
                   filterText={filterText}
+                  initialExpandMode={treeCommand?.type ?? "expandAll"}
                   onPathHover={setJsonPath}
                   onPathLeave={() => setJsonPath("$")}
                   onPathClick={setJsonPath}
+                  onDeletePath={handleDeleteJsonPath}
                 />
               ) : inputMode === "curl" && curlParsed ? (
                 <div className="text-sm text-green-600 dark:text-green-400 p-2">
                   ✓ {t("jsonLab.curl.parsed")} - {curlParsed.body ? "Body JSON 已解析" : "无 Body"}
                 </div>
+              ) : jsonError ? (
+                <div className="flex h-full items-center justify-center p-6 text-center">
+                  <div className="max-w-md rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+                    <div className="font-medium">{t("jsonLab.error.parse")}</div>
+                    <div className="mt-1 font-mono text-xs">
+                      line {jsonError.line}, column {jsonError.column}: {jsonError.message}
+                    </div>
+                  </div>
+                </div>
               ) : (
-                <Textarea
-                  className="font-mono text-sm h-full w-full border-none focus-visible:ring-0 resize-none bg-transparent"
-                  readOnly
-                  value={formattedJson || (jsonError ? t("jsonLab.tree.empty") : t("jsonLab.input.placeholder"))}
-                />
+                <div className="h-full w-full" />
               )}
             </div>
           </div>

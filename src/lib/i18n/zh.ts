@@ -470,10 +470,13 @@ export const zh = {
   'jsonLab.editor.pathCopied': 'JSONPath 已复制',
   // 新增词条
   'jsonLab.output.transform': '数据转换',
+  'jsonLab.format.label': '格式化',
   'jsonLab.minify.label': '压缩',
   'jsonLab.minify.success': 'JSON 已压缩',
   'jsonLab.minify.nothing': '无需压缩（已是紧凑格式）',
   'jsonLab.expand.label': '展开',
+  'jsonLab.tree.expandAll': '全展开',
+  'jsonLab.tree.collapseAll': '全收缩',
   'jsonLab.convert.snakeToCamel': '已转换为驼峰命名',
   'jsonLab.convert.camelToSnake': '已转换为下划线命名',
   'jsonLab.convert.toggle': '驼峰 ↔ 下划线',

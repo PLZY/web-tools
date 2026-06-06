@@ -454,10 +454,13 @@ export const en = {
   'jsonLab.ddlGuideToSqlTool': 'DDL statement detected. Switch to SQL to Java tool?',
   // 新增词条
   'jsonLab.output.transform': 'Transform',
+  'jsonLab.format.label': 'Format',
   'jsonLab.minify.label': 'Minify',
   'jsonLab.minify.success': 'JSON minified',
   'jsonLab.minify.nothing': 'Nothing to minify (already compact)',
   'jsonLab.expand.label': 'Expand',
+  'jsonLab.tree.expandAll': 'Expand All',
+  'jsonLab.tree.collapseAll': 'Collapse All',
   'jsonLab.convert.snakeToCamel': 'Converted to camelCase',
   'jsonLab.convert.camelToSnake': 'Converted to snake_case',
   'jsonLab.convert.toggle': 'Camel ↔ Snake',

@@ -16,17 +16,17 @@ export default function JsonLabPageContent() {
   ];
 
   return (
-    <div className="container mx-auto px-4 py-6 space-y-8">
-      <div className="space-y-4">
+    <div className="w-full max-w-none px-4 py-2 space-y-4">
+      <div className="sr-only">
         <h1 className="text-3xl font-extrabold tracking-tight text-slate-950 dark:text-slate-50">
           {t('jsonLab.title')}
         </h1>
-        <p className="text-muted-foreground text-lg font-medium">
+        <p className="text-muted-foreground text-sm font-medium">
           {t('home.jsonLab.desc')}
         </p>
       </div>
 
-      <div className="h-[calc(100vh-120px)] min-h-[500px]">
+      <div className="h-[calc(100vh-64px)] min-h-[720px]">
         <JsonLab />
       </div>
 
